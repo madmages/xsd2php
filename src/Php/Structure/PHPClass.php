@@ -152,17 +152,24 @@ class PHPClass
         return null;
     }
 
-    public function getPhpType(): string
+    public function getPhpType(bool $with_mixed = true, bool $is_nullable = false): ?string
     {
         if (!$this->getNamespace()) {
             if ($this->isNativeType()) {
-                return $this->getName();
+                if ($with_mixed) {
+                    $result = $this->getName();
+                } else {
+                    $type = $this->getName();
+                    $result = ($type !== Types::MIXED ? $type : null);
+                }
+            } else {
+                $result = self::NS_SLASH . $this->getName();
             }
-
-            return self::NS_SLASH . $this->getName();
+        } else {
+            $result = self::NS_SLASH . $this->getFullName();
         }
 
-        return self::NS_SLASH . $this->getFullName();
+        return ($result ? ($is_nullable ? '?' : '') . $result : null);
     }
 
     public function getNamespace(): ?string

@@ -7,6 +7,9 @@ class PHPArg
     /** @var string|null */
     protected $doc;
 
+    /** @var bool */
+    protected $is_nullable = false;
+
     /** @var PHPClass|null */
     protected $type;
 
@@ -22,6 +25,17 @@ class PHPArg
         $this->type = $type;
     }
 
+    public function setIsNullable(bool $is_nullable): self
+    {
+        $this->is_nullable = $is_nullable;
+        return $this;
+    }
+
+    public function getIsNullable(): bool
+    {
+        return $this->is_nullable;
+    }
+
     public function getDoc(): ?string
     {
         return $this->doc;
@@ -33,6 +47,9 @@ class PHPArg
         return $this;
     }
 
+    /**
+     * @return static|null
+     */
     public function getType(): ?PHPClass
     {
         return $this->type;

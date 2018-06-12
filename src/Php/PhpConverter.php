@@ -530,6 +530,7 @@ class PhpConverter extends AbstractConverter
     private function visitElement(PHPClass $class, Schema $schema, ElementSingle $element, $arrayize = true): PHPProperty
     {
         $property = new PHPProperty();
+        $property->setIsNullable($element->getMin() === 0);
         $property->setName($this->getNamingStrategy()->getPropertyName($element));
         /** @var Element $element */
         $property->setDoc($element->getDoc());
