@@ -96,6 +96,11 @@ class ShortNamingStrategy implements NamingStrategy
         return $name;
     }
 
+    private function classify($name)
+    {
+        return Inflector::classify(str_replace(".", " ", $name));
+    }
+
     public function getAnonymousTypeName(Type $type, $parentName)
     {
         return $this->classify($parentName) . "AType";
@@ -113,10 +118,5 @@ class ShortNamingStrategy implements NamingStrategy
             $name .= 'Xsd';
         }
         return $name;
-    }
-
-    private function classify($name)
-    {
-        return Inflector::classify(str_replace(".", " ", $name));
     }
 }

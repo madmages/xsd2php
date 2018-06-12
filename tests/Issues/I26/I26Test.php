@@ -11,7 +11,7 @@ class I26Test extends \PHPUnit_Framework_TestCase
     public function testSkipWhenEmptyOnOptionalAndRequiredLists()
     {
         $reader = new SchemaReader();
-        $schema = $reader->readFile(__DIR__.'/data.xsd');
+        $schema = $reader->readFile(__DIR__ . '/data.xsd');
 
         $yamlConverter = new YamlConverter(new ShortNamingStrategy());
         $yamlConverter->addNamespace('', 'NestedArrayTest');

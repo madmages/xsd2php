@@ -1,4 +1,5 @@
 <?php
+
 namespace GoetasWebservices\Xsd\XsdToPhp\Tests\Php\PathGenerator;
 
 use GoetasWebservices\Xsd\XsdToPhp\Jms\PathGenerator\Psr4PathGenerator;
@@ -24,29 +25,29 @@ class JMSPathGeneratorTest extends \PHPUnit_Framework_TestCase
     public function testNoNs()
     {
         $this->setExpectedException('GoetasWebservices\Xsd\XsdToPhp\PathGenerator\PathGeneratorException');
-        $generator = new Psr4PathGenerator(array(
+        $generator = new Psr4PathGenerator([
             'myns2\\' => $this->tmpdir
-        ));
-        $generator->getPath(array('myns\Bar' => true));
+        ]);
+        $generator->getPath(['myns\Bar' => true]);
     }
 
     public function testWriterLong()
     {
-        $generator = new Psr4PathGenerator(array(
+        $generator = new Psr4PathGenerator([
             'myns\\' => $this->tmpdir
-        ));
+        ]);
 
-        $path = $generator->getPath(array('myns\foo\Bar' => true));
+        $path = $generator->getPath(['myns\foo\Bar' => true]);
         $this->assertEquals($path, $this->tmpdir . "/foo.Bar.yml");
     }
 
     public function testWriter()
     {
-        $generator = new Psr4PathGenerator(array(
+        $generator = new Psr4PathGenerator([
             'myns\\' => $this->tmpdir
-        ));
+        ]);
 
-        $path = $generator->getPath(array('myns\Bar' => true));
+        $path = $generator->getPath(['myns\Bar' => true]);
 
         $this->assertEquals($path, $this->tmpdir . "/Bar.yml");
     }

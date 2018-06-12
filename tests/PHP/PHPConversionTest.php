@@ -1,46 +1,14 @@
 <?php
+
 namespace GoetasWebservices\Xsd\XsdToPhp\Tests\JmsSerializer\OTA;
 
+use GoetasWebservices\XML\XSDReader\SchemaReader;
 use GoetasWebservices\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
 use GoetasWebservices\Xsd\XsdToPhp\Php\ClassGenerator;
 use GoetasWebservices\Xsd\XsdToPhp\Php\PhpConverter;
-use GoetasWebservices\XML\XSDReader\SchemaReader;
 
 class PHPConversionTest extends \PHPUnit_Framework_TestCase
 {
-
-    /**
-     *
-     * @param mixed $xml
-     * @return \Zend\Code\Generator\ClassGenerator[]
-     */
-    protected function getClasses($xml)
-    {
-        $phpcreator = new PhpConverter(new ShortNamingStrategy());
-        $phpcreator->addNamespace('http://www.example.com', 'Example');
-
-        $generator = new ClassGenerator();
-        $reader = new SchemaReader();
-
-        if (!is_array($xml)) {
-            $xml = [
-                'schema.xsd' => $xml
-            ];
-        }
-        $schemas = [];
-        foreach ($xml as $name => $str) {
-            $schemas[] = $reader->readString($str, $name);
-        }
-        $items = $phpcreator->convert($schemas);
-
-        $classes = array();
-        foreach ($items as $k => $item) {
-            if ($codegen = $generator->generate($item)) {
-                $classes[$k] = $codegen;
-            }
-        }
-        return $classes;
-    }
 
     public function testSimpleContent()
     {
@@ -67,6 +35,39 @@ class PHPConversionTest extends \PHPUnit_Framework_TestCase
 
         $this->assertTrue($codegen->hasMethod('getCode'));
         $this->assertTrue($codegen->hasMethod('setCode'));
+    }
+
+    /**
+     *
+     * @param mixed $xml
+     * @return \Zend\Code\Generator\ClassGenerator[]
+     */
+    protected function getClasses($xml)
+    {
+        $phpcreator = new PhpConverter(new ShortNamingStrategy());
+        $phpcreator->addNamespace('http://www.example.com', 'Example');
+
+        $generator = new ClassGenerator();
+        $reader = new SchemaReader();
+
+        if (!is_array($xml)) {
+            $xml = [
+                'schema.xsd' => $xml
+            ];
+        }
+        $schemas = [];
+        foreach ($xml as $name => $str) {
+            $schemas[] = $reader->readString($str, $name);
+        }
+        $items = $phpcreator->convert($schemas);
+
+        $classes = [];
+        foreach ($items as $k => $item) {
+            if ($codegen = $generator->generateClass($item)) {
+                $classes[$k] = $codegen;
+            }
+        }
+        return $classes;
     }
 
     public function testSimpleNoAttributesContent()

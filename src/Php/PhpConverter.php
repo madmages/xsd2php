@@ -1,7 +1,9 @@
 <?php
+
 namespace GoetasWebservices\Xsd\XsdToPhp\Php;
 
 use Exception;
+use GoetasWebservices\XML\XSDReader\Schema\Attribute\Attribute;
 use GoetasWebservices\XML\XSDReader\Schema\Attribute\AttributeItem;
 use GoetasWebservices\XML\XSDReader\Schema\Attribute\Group as AttributeGroup;
 use GoetasWebservices\XML\XSDReader\Schema\Element\Element;
@@ -22,83 +24,170 @@ use GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPClass;
 use GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPClassOf;
 use GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPProperty;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 class PhpConverter extends AbstractConverter
 {
+    /** @var ClassData[] */
+    private $classes;
 
     public function __construct(NamingStrategy $namingStrategy, LoggerInterface $loggerInterface = null)
     {
         parent::__construct($namingStrategy, $loggerInterface);
 
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "dateTime", function (Type $type) {
-            return "DateTime";
+        $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'dateTime', function () {
+            return 'DateTime';
         });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "time", function (Type $type) {
-            return "DateTime";
+        $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'time', function () {
+            return 'DateTime';
         });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "date", function (Type $type) {
-            return "DateTime";
+        $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'date', function () {
+            return 'DateTime';
         });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "anySimpleType", function (Type $type) {
-            return "mixed";
+        $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'anySimpleType', function () {
+            return Types::MIXED;
         });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "anyType", function (Type $type) {
-            return "mixed";
+        $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'anyType', function () {
+            return Types::MIXED;
         });
     }
 
-    private $classes = [];
-
-    public function convert(array $schemas)
+    /**
+     * @param Schema[] $schemas
+     * @return PHPClass[]
+     * @throws Exception
+     */
+    public function convert(array $schemas): array
     {
-        $visited = array();
-        $this->classes = array();
+        $visited = [];
+        $this->classes = [];
         foreach ($schemas as $schema) {
             $this->navigate($schema, $visited);
         }
+
         return $this->getTypes();
     }
 
     /**
-     *
-     * @return PHPClass[]
+     * @param Schema $schema
+     * @param bool[] $visited
+     * @throws Exception
      */
-    private function getTypes()
+    private function navigate(Schema $schema, array &$visited): void
     {
-        uasort($this->classes, function ($a, $b) {
-            return strcmp($a["class"]->getFullName(), $b["class"]->getFullName());
-        });
-        $ret = array();
-        foreach ($this->classes as $classData) {
-            if (empty($classData["skip"])) {
-                $ret[$classData["class"]->getFullName()] = $classData["class"];
-            }
-        }
-
-        return $ret;
-    }
-
-    private function navigate(Schema $schema, array &$visited)
-    {
-        if (isset($visited[spl_object_hash($schema)])) {
+        if (isset($visited[$schema_id = spl_object_hash($schema)])) {
             return;
         }
-        $visited[spl_object_hash($schema)] = true;
+        $visited[$schema_id] = true;
 
         foreach ($schema->getTypes() as $type) {
             $this->visitType($type);
         }
+
         foreach ($schema->getElements() as $element) {
-            $this->visitElementDef($element);
+            $this->getClassByElement($element);
         }
 
-        foreach ($schema->getSchemas() as $schildSchema) {
-            if (!in_array($schildSchema->getTargetNamespace(), $this->baseSchemas, true)) {
-                $this->navigate($schildSchema, $visited);
+        foreach ($schema->getSchemas() as $child_schema) {
+            if (!$this->isInBaseSchema($child_schema)) {
+                $this->navigate($child_schema, $visited);
             }
         }
     }
 
+    /**
+     *
+     * @param Type $type
+     * @param bool $force
+     * @param bool $skip
+     * @return PHPClass
+     * @throws Exception
+     */
+    private function visitType(Type $type, bool $force = false, bool $skip = false): PHPClass
+    {
+        if (!$class_data = $this->getClassData($type)) {
+            $class_data = $this->createClassData($type);
+            $class = $class_data->getClass();
+
+            $skip = $skip || $this->isInBaseSchema($type->getSchema());
+            if ($alias = $this->getTypeAlias($type)) {
+                $class->setName($alias);
+
+                $class_data->skip();
+
+                return $class;
+            }
+
+            [$name, $ns] = $this->findPHPName($type);
+            $class
+                ->setName($name)
+                ->setNamespace($ns)
+                ->setDoc($type->getDoc() . PHP_EOL . 'XSD Type: ' . ($type->getName() ?? 'anonymous'));
+
+            $this->visitTypeBase($class, $type);
+
+            if ($type instanceof SimpleType) {
+                $class_data->skip();
+
+                return $class;
+            }
+
+            if (!$force && ($this->isArrayType($type) || $this->isArrayNestedElement($type))) {
+                $class_data->skip();
+
+                return $class;
+            }
+
+            $class_data->skip($skip || (bool)$this->getTypeAlias($type));
+        } else {
+            if ($force && !($type instanceof SimpleType) && !$this->getTypeAlias($type)) {
+                $class_data->skip($this->isInBaseSchema($type->getSchema()));
+            }
+        }
+
+        return $class_data->getClass();
+    }
+
+    /**
+     * @param Type $type
+     * @return array
+     * @throws \RuntimeException
+     */
+    private function findPHPName(Type $type): array
+    {
+        $schema = $type->getSchema();
+
+        if ($className = $this->getTypeAlias($type)) {
+            if (($pos = strrpos($className, '\\')) !== false) {
+                return [
+                    substr($className, $pos + 1),
+                    substr($className, 0, $pos)
+                ];
+            }
+
+            return [
+                $className,
+                null
+            ];
+        }
+
+        $name = $this->getNamingStrategy()->getTypeName($type);
+
+        if (!isset($this->namespaces[$schema->getTargetNamespace()])) {
+            throw new RuntimeException(sprintf("Can't find a PHP namespace to '%s' namespace", $schema->getTargetNamespace()));
+        }
+        $ns = $this->namespaces[$schema->getTargetNamespace()];
+        return [
+            $name,
+            $ns
+        ];
+    }
+
+    /**
+     * @param PHPClass $class
+     * @param Type $type
+     * @throws Exception
+     */
     private function visitTypeBase(PHPClass $class, Type $type)
     {
         $class->setAbstract($type->isAbstract());
@@ -114,200 +203,12 @@ class PhpConverter extends AbstractConverter
         }
     }
 
-    private function visitGroup(PHPClass $class, Schema $schema, Group $group)
-    {
-        foreach ($group->getElements() as $childGroup) {
-            if ($childGroup instanceof Group) {
-                $this->visitGroup($class, $schema, $childGroup);
-            } else {
-                $property = $this->visitElement($class, $schema, $childGroup);
-                $class->addProperty($property);
-            }
-        }
-    }
-
-    private function visitAttributeGroup(PHPClass $class, Schema $schema, AttributeGroup $att)
-    {
-        foreach ($att->getAttributes() as $childAttr) {
-            if ($childAttr instanceof AttributeGroup) {
-                $this->visitAttributeGroup($class, $schema, $childAttr);
-            } else {
-                $property = $this->visitAttribute($class, $schema, $childAttr);
-                $class->addProperty($property);
-            }
-        }
-    }
-
-    private $skipByType = [];
-
     /**
-     * @param ElementDef $element
-     * @param bool $skip
-     * @return PHPClass
-     */
-    public function visitElementDef(ElementDef $element, $skip = false)
-    {
-        if (!isset($this->classes[spl_object_hash($element)])) {
-            $schema = $element->getSchema();
-            $skip = $skip || in_array($element->getSchema()->getTargetNamespace(), $this->baseSchemas, true);
-            $class = new PHPClass();
-            $class->setDoc($element->getDoc());
-            $class->setName($this->getNamingStrategy()->getItemName($element));
-            $class->setDoc($element->getDoc());
-
-            if (!isset($this->namespaces[$schema->getTargetNamespace()])) {
-                throw new Exception(sprintf("Can't find a PHP namespace to '%s' namespace", $schema->getTargetNamespace()));
-            }
-            $class->setNamespace($this->namespaces[$schema->getTargetNamespace()]);
-
-            $this->classes[spl_object_hash($element)]["class"] = $class;
-            $this->classes[spl_object_hash($element)]["skip"] = $skip;
-            $this->skipByType[spl_object_hash($class)] = $skip;
-
-            if (!$element->getType()->getName()) {
-                $this->visitTypeBase($class, $element->getType());
-            } else {
-
-                if ($alias = $this->getTypeAlias($element)) {
-                    $class->setName($alias);
-                    $class->setNamespace(null);
-                    $this->classes[spl_object_hash($element)]["skip"] = true;
-                    $this->skipByType[spl_object_hash($element)] = true;
-                    return $class;
-                }
-
-                $this->handleClassExtension($class, $element->getType());
-            }
-        }
-        return $this->classes[spl_object_hash($element)]["class"];
-    }
-
-    public function isSkip($class)
-    {
-        return !empty($this->skipByType[spl_object_hash($class)]);
-    }
-
-    private function findPHPName(Type $type)
-    {
-        $schema = $type->getSchema();
-
-        if ($className = $this->getTypeAlias($type)) {
-
-            if (($pos = strrpos($className, '\\')) !== false) {
-                return [
-                    substr($className, $pos + 1),
-                    substr($className, 0, $pos)
-                ];
-            } else {
-                return [
-                    $className,
-                    null
-                ];
-            }
-        }
-
-        $name = $this->getNamingStrategy()->getTypeName($type);
-
-        if (!isset($this->namespaces[$schema->getTargetNamespace()])) {
-            throw new Exception(sprintf("Can't find a PHP namespace to '%s' namespace", $schema->getTargetNamespace()));
-        }
-        $ns = $this->namespaces[$schema->getTargetNamespace()];
-        return [
-            $name,
-            $ns
-        ];
-    }
-
-    /**
-     *
-     * @param Type $type
-     * @param bool $force
-     * @param bool $skip
-     * @return PHPClass
+     * @param PHPClass $class
+     * @param SimpleType $type
      * @throws Exception
      */
-    public function visitType(Type $type, $force = false, $skip = false)
-    {
-        if (!isset($this->classes[spl_object_hash($type)])) {
-
-            $skip = $skip || in_array($type->getSchema()->getTargetNamespace(), $this->baseSchemas, true);
-
-            $this->classes[spl_object_hash($type)]["class"] = $class = new PHPClass();
-
-            if ($alias = $this->getTypeAlias($type)) {
-                $class->setName($alias);
-                $this->classes[spl_object_hash($type)]["skip"] = true;
-                $this->skipByType[spl_object_hash($class)] = true;
-                return $class;
-            }
-
-            list ($name, $ns) = $this->findPHPName($type);
-            $class->setName($name);
-            $class->setNamespace($ns);
-
-            $class->setDoc($type->getDoc() . PHP_EOL . "XSD Type: " . ($type->getName() ?: 'anonymous'));
-
-            $this->visitTypeBase($class, $type);
-
-            if ($type instanceof SimpleType) {
-                $this->classes[spl_object_hash($type)]["skip"] = true;
-                $this->skipByType[spl_object_hash($class)] = true;
-                return $class;
-            }
-            if (($this->isArrayType($type) || $this->isArrayNestedElement($type)) && !$force) {
-                $this->classes[spl_object_hash($type)]["skip"] = true;
-                $this->skipByType[spl_object_hash($class)] = true;
-                return $class;
-            }
-
-            $this->classes[spl_object_hash($type)]["skip"] = $skip || !!$this->getTypeAlias($type);
-        } elseif ($force) {
-            if (!($type instanceof SimpleType) && !$this->getTypeAlias($type)) {
-                $this->classes[spl_object_hash($type)]["skip"] = in_array($type->getSchema()->getTargetNamespace(), $this->baseSchemas, true);
-            }
-        }
-        return $this->classes[spl_object_hash($type)]["class"];
-    }
-
-    /**
-     * @param Type $type
-     * @param string $name
-     * @param PHPClass $parentClass
-     * @return \GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPClass
-     */
-    private function visitTypeAnonymous(Type $type, $name, PHPClass $parentClass)
-    {
-        if (!isset($this->classes[spl_object_hash($type)])) {
-            $this->classes[spl_object_hash($type)]["class"] = $class = new PHPClass();
-            $class->setName($this->getNamingStrategy()->getAnonymousTypeName($type, $name));
-
-            $class->setNamespace($parentClass->getNamespace() . "\\" . $parentClass->getName());
-            $class->setDoc($type->getDoc());
-
-            $this->visitTypeBase($class, $type);
-
-            if ($type instanceof SimpleType) {
-                $this->classes[spl_object_hash($type)]["skip"] = true;
-                $this->skipByType[spl_object_hash($class)] = true;
-            }
-        }
-        return $this->classes[spl_object_hash($type)]["class"];
-    }
-
-    private function visitComplexType(PHPClass $class, ComplexType $type)
-    {
-        $schema = $type->getSchema();
-        foreach ($type->getElements() as $element) {
-            if ($element instanceof Group) {
-                $this->visitGroup($class, $schema, $element);
-            } else {
-                $property = $this->visitElement($class, $schema, $element);
-                $class->addProperty($property);
-            }
-        }
-    }
-
-    private function visitSimpleType(PHPClass $class, SimpleType $type)
+    private function visitSimpleType(PHPClass $class, SimpleType $type): void
     {
         if ($restriction = $type->getRestriction()) {
             $parent = $restriction->getBase();
@@ -316,18 +217,19 @@ class PhpConverter extends AbstractConverter
                 $this->handleClassExtension($class, $parent);
             }
 
+            /** @var array[] $checks */
             foreach ($restriction->getChecks() as $typeCheck => $checks) {
                 foreach ($checks as $check) {
                     $class->addCheck('__value', $typeCheck, $check);
                 }
             }
         } elseif ($unions = $type->getUnions()) {
-            $types = array();
-            foreach ($unions as $i => $unon) {
-                if (!$unon->getName()) {
-                    $types[] = $this->visitTypeAnonymous($unon, $type->getName() . $i, $class);
+            $types = [];
+            foreach ($unions as $i => $union) {
+                if (!$union->getName()) {
+                    $types[] = $this->visitTypeAnonymous($union, $type->getName() . $i, $class);
                 } else {
-                    $types[] = $this->visitType($unon);
+                    $types[] = $this->visitType($union);
                 }
             }
 
@@ -337,21 +239,61 @@ class PhpConverter extends AbstractConverter
         }
     }
 
+    /**
+     * @param PHPClass $class
+     * @param Type $type
+     * @throws Exception
+     */
     private function handleClassExtension(PHPClass $class, Type $type)
     {
-
         if ($alias = $this->getTypeAlias($type)) {
-            $c = PHPClass::createFromFQCN($alias);
-            $val = new PHPProperty('__value');
-            $val->setType($c);
-            $c->addProperty($val);
-            $class->setExtends($c);
+            $type_class = PHPClass::createFromFQCN($alias);
+            if ($type_class === null) {
+                throw new \RuntimeException('null occurs');
+            }
+
+            $value_property = new PHPProperty('__value');
+            $value_property->setType($type_class);
+            $type_class->addProperty($value_property);
+            $class->setExtends($type_class);
         } else {
             $extension = $this->visitType($type, true);
             $class->setExtends($extension);
         }
     }
 
+    /**
+     * @param Type $type
+     * @param string $name
+     * @param PHPClass $parent_class
+     * @return \GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPClass
+     * @throws Exception
+     */
+    private function visitTypeAnonymous(Type $type, string $name, PHPClass $parent_class): PHPClass
+    {
+        if (!$class_data = $this->getClassData($type)) {
+            $class_data = $this->createClassData($type);
+
+            if ($type instanceof SimpleType) {
+                $class_data->skip();
+            }
+
+            $class_data->getClass()
+                ->setName($this->getNamingStrategy()->getAnonymousTypeName($type, $name))
+                ->setNamespace($parent_class->getNamespace() . "\\" . $parent_class->getName())
+                ->setDoc($type->getDoc());
+
+            $this->visitTypeBase($class_data->getClass(), $type);
+        }
+
+        return $class_data->getClass();
+    }
+
+    /**
+     * @param PHPClass $class
+     * @param BaseComplexType $type
+     * @throws Exception
+     */
     private function visitBaseComplexType(PHPClass $class, BaseComplexType $type)
     {
         $parent = $type->getParent();
@@ -367,24 +309,55 @@ class PhpConverter extends AbstractConverter
             if ($attr instanceof AttributeGroup) {
                 $this->visitAttributeGroup($class, $schema, $attr);
             } else {
-                $property = $this->visitAttribute($class, $schema, $attr);
+                $property = $this->visitAttribute($class, $attr);
                 $class->addProperty($property);
             }
         }
     }
 
-    private function visitAttribute(PHPClass $class, Schema $schema, AttributeItem $attribute, $arrayize = true)
+    /**
+     * @param PHPClass $class
+     * @param Schema $schema
+     * @param AttributeGroup $attribute_group
+     * @throws Exception
+     */
+    private function visitAttributeGroup(PHPClass $class, Schema $schema, AttributeGroup $attribute_group)
+    {
+        foreach ($attribute_group->getAttributes() as $childAttr) {
+            if ($childAttr instanceof AttributeGroup) {
+                $this->visitAttributeGroup($class, $schema, $childAttr);
+            } else {
+                $property = $this->visitAttribute($class, $childAttr);
+                $class->addProperty($property);
+            }
+        }
+    }
+
+    /**
+     * @param PHPClass $class
+     * @param AttributeItem $attribute
+     * @return PHPProperty
+     * @throws Exception
+     */
+    private function visitAttribute(PHPClass $class, AttributeItem $attribute): PHPProperty
     {
         $property = new PHPProperty();
         $property->setName($this->getNamingStrategy()->getPropertyName($attribute));
 
-        if ($arrayize && $itemOfArray = $this->isArrayType($attribute->getType())) {
-            if ($attribute->getType()->getName()) {
+        /** @var Attribute $attribute */
+        $attribute_type = $attribute->getType();
+        if ($attribute_type === null) {
+            throw new \RuntimeException('null occur');
+        }
+
+        if ($item_of_array = $this->isArrayType($attribute_type)) {
+            if ($attribute_type->getName()) {
                 $arg = new PHPArg($this->getNamingStrategy()->getPropertyName($attribute));
-                $arg->setType($this->visitType($itemOfArray));
+                $arg->setType($this->visitType($item_of_array));
+
                 $property->setType(new PHPClassOf($arg));
             } else {
-                $property->setType($this->visitTypeAnonymous($attribute->getType(), $attribute->getName(), $class));
+                $property->setType($this->visitTypeAnonymous($attribute_type, $attribute->getName(), $class));
             }
         } else {
             $property->setType($this->findPHPClass($class, $attribute, true));
@@ -395,89 +368,94 @@ class PhpConverter extends AbstractConverter
     }
 
     /**
-     *
      * @param PHPClass $class
-     * @param Schema $schema
-     * @param Element $element
-     * @param bool $arrayize
-     * @return \GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPProperty
+     * @param Item $node
+     * @param bool $force
+     * @return bool|PHPClass|null
+     * @throws Exception
      */
-    private function visitElement(PHPClass $class, Schema $schema, ElementSingle $element, $arrayize = true)
+    private function findPHPClass(PHPClass $class, Item $node, bool $force = false)
     {
-        $property = new PHPProperty();
-        $property->setName($this->getNamingStrategy()->getPropertyName($element));
-        $property->setDoc($element->getDoc());
+        if ($node instanceof ElementRef) {
+            return $this->getClassByElement($node->getReferencedElement());
+        }
 
-        $t = $element->getType();
+        $node_type = $node->getType();
+        if ($node_type === null) {
+            throw new \RuntimeException('null occur');
+        }
 
-        if ($arrayize) {
-            if ($itemOfArray = $this->isArrayType($t)) {
+        if ($valueProp = $this->typeHasValue($node_type, $class, '')) {
+            return $valueProp;
+        }
 
-                if (!$itemOfArray->getName()) {
-                    if ($element instanceof ElementRef) {
-                        $itemClass = $this->findPHPClass($class, $element);
-                    } else {
-                        $itemClass = $class;
-                    }
+        if (!$node_type->getName()) {
+            return $this->visitTypeAnonymous($node_type, $node->getName(), $class);
+        }
 
-                    $classType = $this->visitTypeAnonymous($itemOfArray, $element->getName(), $itemClass);
-                } else {
-                    $classType = $this->visitType($itemOfArray);
+        return $this->visitType($node_type, $force);
+    }
+
+    /**
+     * @param ElementDef $element
+     * @param bool $skip
+     * @return PHPClass
+     * @throws Exception
+     */
+    private function getClassByElement(ElementDef $element, bool $skip = false): PHPClass
+    {
+        if (!$class_data = $this->getClassData($element)) {
+            $class_data = $this->createClassData($element);
+            $class = $class_data->getClass();
+
+            $schema = $element->getSchema();
+            $class_data->skip($skip || $this->isInBaseSchema($schema));
+
+            if (!isset($this->namespaces[$target_ns = $schema->getTargetNamespace()])) {
+                throw new RuntimeException(sprintf("Can't find a PHP namespace to '%s' namespace", $target_ns));
+            }
+
+            $class
+                ->setDoc($element->getDoc())
+                ->setName($this->getNamingStrategy()->getItemName($element))
+                ->setNamespace($this->namespaces[$target_ns]);
+
+
+            if (($element_type = $element->getType()) === null) {
+                throw new \RuntimeException('null occur');
+            }
+
+            if (!$element_type->getName()) {
+                $this->visitTypeBase($class, $element_type);
+            } else {
+                if ($alias = $this->getTypeAlias($element)) {
+                    $class
+                        ->setName($alias)
+                        ->setNamespace(null);
+
+                    $class_data->skip();
+
+                    return $class;
                 }
 
-                $arg = new PHPArg($this->getNamingStrategy()->getPropertyName($element));
-                $arg->setType($classType);
-                $property->setType(new PHPClassOf($arg));
-                return $property;
-            } elseif ($itemOfArray = $this->isArrayNestedElement($t)) {
-                if (!$t->getName()) {
-                    if ($element instanceof ElementRef) {
-                        $itemClass = $this->findPHPClass($class, $element);
-                    } else {
-                        $itemClass = $class;
-                    }
-
-                    $classType = $this->visitTypeAnonymous($t, $element->getName(), $itemClass);
-                } else {
-                    $classType = $this->visitType($t);
-                }
-                $elementProp = $this->visitElement($classType, $schema, $itemOfArray, false);
-                $property->setType(new PHPClassOf($elementProp));
-                return $property;
-            } elseif ($this->isArrayElement($element)) {
-                $arg = new PHPArg($this->getNamingStrategy()->getPropertyName($element));
-
-                $arg->setType($this->findPHPClass($class, $element));
-                $arg->setDefault(array());
-                $property->setType(new PHPClassOf($arg));
-                return $property;
+                $this->handleClassExtension($class, $element_type);
             }
         }
 
-        $property->setType($this->findPHPClass($class, $element, true));
-        return $property;
+        return $class_data->getClass();
     }
 
-    private function findPHPClass(PHPClass $class, Item $node, $force = false)
-    {
-
-        if ($node instanceof ElementRef) {
-            return $this->visitElementDef($node->getReferencedElement());
-        }
-        if ($valueProp = $this->typeHasValue($node->getType(), $class, '')) {
-            return $valueProp;
-        }
-        if (!$node->getType()->getName()) {
-            return $this->visitTypeAnonymous($node->getType(), $node->getName(), $class);
-        } else {
-            return $this->visitType($node->getType(), $force);
-        }
-    }
-
-    private function typeHasValue(Type $type, PHPClass $parentClass, $name)
+    /**
+     * @param Type $type
+     * @param PHPClass $parent_class
+     * @param $name
+     * @return bool|PHPClass|null
+     * @throws Exception
+     */
+    private function typeHasValue(Type $type, PHPClass $parent_class, string $name)
     {
         do {
-            if (!($type instanceof SimpleType)) {
+            if (!$type instanceof SimpleType) {
                 return false;
             }
 
@@ -486,12 +464,12 @@ class PhpConverter extends AbstractConverter
             }
 
             if ($type->getName()) {
-                $parentClass = $this->visitType($type);
+                $parent_class = $this->visitType($type);
             } else {
-                $parentClass = $this->visitTypeAnonymous($type, $name, $parentClass);
+                $parent_class = $this->visitTypeAnonymous($type, $name, $parent_class);
             }
 
-            if ($prop = $parentClass->getPropertyInHierarchy('__value')) {
+            if ($prop = $parent_class->getPropertyInHierarchy('__value')) {
                 return $prop->getType();
             }
         } while (
@@ -501,5 +479,173 @@ class PhpConverter extends AbstractConverter
         );
 
         return false;
+    }
+
+    /**
+     * @param PHPClass $class
+     * @param ComplexType $type
+     * @throws Exception
+     */
+    private function visitComplexType(PHPClass $class, ComplexType $type)
+    {
+        $schema = $type->getSchema();
+        /** @var Element $element */
+        foreach ($type->getElements() as $element) {
+            if ($element instanceof Group) {
+                $this->visitGroup($class, $schema, $element);
+            } else {
+                $property = $this->visitElement($class, $schema, $element);
+                $class->addProperty($property);
+            }
+        }
+    }
+
+    /**
+     * @param PHPClass $class
+     * @param Schema $schema
+     * @param Group $group
+     * @throws Exception
+     */
+    private function visitGroup(PHPClass $class, Schema $schema, Group $group)
+    {
+        /** @var Element $childGroup */
+        foreach ($group->getElements() as $childGroup) {
+            if ($childGroup instanceof Group) {
+                $this->visitGroup($class, $schema, $childGroup);
+            } else {
+                $property = $this->visitElement($class, $schema, $childGroup);
+                $class->addProperty($property);
+            }
+        }
+    }
+
+    /**
+     * @param PHPClass $class
+     * @param Schema $schema
+     * @param ElementSingle $element
+     * @param bool $arrayize
+     * @return \GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPProperty
+     * @throws Exception
+     */
+    private function visitElement(PHPClass $class, Schema $schema, ElementSingle $element, $arrayize = true): PHPProperty
+    {
+        $property = new PHPProperty();
+        $property->setName($this->getNamingStrategy()->getPropertyName($element));
+        /** @var Element $element */
+        $property->setDoc($element->getDoc());
+
+        $element_type = $element->getType();
+
+        if ($arrayize) {
+            if ($element_type === null) {
+                throw new \RuntimeException('null occur');
+            }
+
+            /** @var Type $item_of_array */
+            if ($item_of_array = $this->isArrayType($element_type)) {
+                if (!$item_of_array->getName()) {
+                    if ($element instanceof ElementRef) {
+                        $itemClass = $this->findPHPClass($class, $element);
+                    } else {
+                        $itemClass = $class;
+                    }
+
+                    $classType = $this->visitTypeAnonymous($item_of_array, $element->getName(), $itemClass);
+                } else {
+                    $classType = $this->visitType($item_of_array);
+                }
+
+                $arg = new PHPArg($this->getNamingStrategy()->getPropertyName($element));
+                $arg->setType($classType);
+                $property->setType(new PHPClassOf($arg));
+                return $property;
+            }
+
+            /** @var Element $item_of_array */
+            if ($item_of_array = $this->isArrayNestedElement($element_type)) {
+                if (!$element_type->getName()) {
+                    if ($element instanceof ElementRef) {
+                        $itemClass = $this->findPHPClass($class, $element);
+                    } else {
+                        $itemClass = $class;
+                    }
+
+                    $classType = $this->visitTypeAnonymous($element_type, $element->getName(), $itemClass);
+                } else {
+                    $classType = $this->visitType($element_type);
+                }
+                $elementProp = $this->visitElement($classType, $schema, $item_of_array, false);
+                $property->setType(new PHPClassOf($elementProp));
+                return $property;
+            }
+
+            if ($this->isArrayElement($element)) {
+                $arg = new PHPArg($this->getNamingStrategy()->getPropertyName($element));
+
+                $arg->setType($this->findPHPClass($class, $element));
+                $arg->setDefault([]);
+                $property->setType(new PHPClassOf($arg));
+                return $property;
+            }
+        }
+
+        $property->setType($this->findPHPClass($class, $element, true));
+        return $property;
+    }
+
+    /**
+     * @return PHPClass[]
+     * @throws \RuntimeException
+     */
+    private function getTypes(): array
+    {
+        uasort($this->classes, function (ClassData $a, ClassData $b) {
+            return strcmp($a->getClass()->getFullName(), $b->getClass()->getFullName());
+        });
+
+        $result = [];
+        foreach ($this->classes as $class_data) {
+            if (!$class_data->isSkip()) {
+                if (!$class = $class_data->getClass()) {
+                    throw new \RuntimeException('null occur');
+                }
+
+                $result[$class->getFullName()] = $class;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param object $obj
+     * @return ClassData|null
+     */
+    private function getClassData(object $obj): ?ClassData
+    {
+        return ($this->classes[spl_object_hash($obj)] ?? null);
+    }
+
+    /**
+     * @param object $obj
+     * @return ClassData
+     * @throws \RuntimeException
+     */
+    private function createClassData(object $obj): ClassData
+    {
+        if ($this->getClassData($obj)) {
+            throw new RuntimeException('Hash exists');
+        }
+
+        return ($this->classes[spl_object_hash($obj)] = new ClassData(new PHPClass()));
+    }
+
+    /**
+     * @param Schema $schema
+     * @return bool
+     */
+    private function isInBaseSchema(Schema $schema): bool
+    {
+        return in_array($schema->getTargetNamespace(), $this->baseSchemas, true);
     }
 }

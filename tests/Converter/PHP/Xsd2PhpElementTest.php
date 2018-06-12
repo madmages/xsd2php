@@ -1,4 +1,5 @@
 <?php
+
 namespace GoetasWebservices\Xsd\XsdToPhp\Tests\Converter\PHP;
 
 class Xsd2PhpElementTest extends Xsd2PhpBase
@@ -17,7 +18,7 @@ class Xsd2PhpElementTest extends Xsd2PhpBase
                </xs:schema>
             ';
 
-        $classes = $this->converter->convert(array($this->reader->readString($content)));
+        $classes = $this->converter->convert([$this->reader->readString($content)]);
 
         $this->assertCount(1, $classes);
         $this->assertInstanceOf('GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPClass', $classes['Example\ElementOne']);
@@ -52,7 +53,7 @@ class Xsd2PhpElementTest extends Xsd2PhpBase
                 </xs:element>
                </xs:schema>
             ';
-        $classes = $this->converter->convert(array($this->reader->readString($content)));
+        $classes = $this->converter->convert([$this->reader->readString($content)]);
 
         $this->assertCount(1, $classes);
         $this->assertInstanceOf('GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPClass', $classes['Example\ElementOne']);
@@ -85,7 +86,7 @@ class Xsd2PhpElementTest extends Xsd2PhpBase
                 </xs:element>
                </xs:schema>
             ';
-        $classes = $this->converter->convert(array($this->reader->readString($content)));
+        $classes = $this->converter->convert([$this->reader->readString($content)]);
 
         $this->assertCount(1, $classes);
         $this->assertInstanceOf('GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPClass', $classes['Example\ElementOne']);
@@ -116,7 +117,7 @@ class Xsd2PhpElementTest extends Xsd2PhpBase
                 </xs:element>
                </xs:schema>
             ';
-        $classes = $this->converter->convert(array($this->reader->readString($content)));
+        $classes = $this->converter->convert([$this->reader->readString($content)]);
 
         $this->assertCount(1, $classes);
         $this->assertInstanceOf('GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPClass', $classes['Example\ElementOne']);

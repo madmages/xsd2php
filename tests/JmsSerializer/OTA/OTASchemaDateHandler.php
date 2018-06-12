@@ -1,4 +1,5 @@
 <?php
+
 namespace GoetasWebservices\Xsd\XsdToPhp\Tests\JmsSerializer\OTA;
 
 use JMS\Serializer\Context;
@@ -13,27 +14,27 @@ class OTASchemaDateHandler implements SubscribingHandlerInterface
 
     protected $defaultTimezone;
 
-    public static function getSubscribingMethods()
-    {
-        return array(
-            array(
-                'direction' => GraphNavigator::DIRECTION_DESERIALIZATION,
-                'format' => 'xml',
-                'type' => 'GoetasWebservices\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime',
-                'method' => 'deserializeDateTime'
-            ),
-            array(
-                'direction' => GraphNavigator::DIRECTION_SERIALIZATION,
-                'format' => 'xml',
-                'type' => 'GoetasWebservices\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime',
-                'method' => 'serializeDateTime'
-            )
-        );
-    }
-
     public function __construct($defaultTimezone = 'UTC')
     {
         $this->defaultTimezone = new \DateTimeZone($defaultTimezone);
+    }
+
+    public static function getSubscribingMethods()
+    {
+        return [
+            [
+                'direction' => GraphNavigator::DIRECTION_DESERIALIZATION,
+                'format'    => 'xml',
+                'type'      => 'GoetasWebservices\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime',
+                'method'    => 'deserializeDateTime'
+            ],
+            [
+                'direction' => GraphNavigator::DIRECTION_SERIALIZATION,
+                'format'    => 'xml',
+                'type'      => 'GoetasWebservices\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime',
+                'method'    => 'serializeDateTime'
+            ]
+        ];
     }
 
     public function serializeDateTime(XmlSerializationVisitor $visitor, OTADateTime $date, array $type, Context $context)

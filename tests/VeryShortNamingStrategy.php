@@ -32,6 +32,15 @@ class VeryShortNamingStrategy extends ShortNamingStrategy
     }
 
     /**
+     * @param string $name
+     * @return string
+     */
+    private function classify($name)
+    {
+        return Inflector::classify(str_replace(".", " ", $name));
+    }
+
+    /**
      * Suffix with 'A' instead of 'AType'
      * @param Type $type
      * @param string $parentName
@@ -40,14 +49,5 @@ class VeryShortNamingStrategy extends ShortNamingStrategy
     public function getAnonymousTypeName(Type $type, $parentName)
     {
         return $this->classify($parentName) . 'A';
-    }
-
-    /**
-     * @param string $name
-     * @return string
-     */
-    private function classify($name)
-    {
-        return Inflector::classify(str_replace(".", " ", $name));
     }
 }

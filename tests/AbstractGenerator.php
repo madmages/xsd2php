@@ -1,4 +1,5 @@
 <?php
+
 namespace GoetasWebservices\Xsd\XsdToPhp\Tests;
 
 use Composer\Autoload\ClassLoader;
@@ -14,8 +15,8 @@ use JMS\Serializer\Handler\HandlerRegistryInterface;
 
 abstract class AbstractGenerator
 {
-    protected $targetNs = array();
-    protected $aliases = array();
+    protected $targetNs = [];
+    protected $aliases = [];
 
     protected $phpDir;
     protected $jmsDir;
@@ -24,7 +25,7 @@ abstract class AbstractGenerator
 
     private $loader;
 
-    public function __construct(array $targetNs, array $aliases = array(), $tmp = null)
+    public function __construct(array $targetNs, array $aliases = [], $tmp = null)
     {
         $tmp = $tmp ?: sys_get_temp_dir();
 
@@ -38,26 +39,7 @@ abstract class AbstractGenerator
 
         $this->loader = new ClassLoader();
         foreach ($this->targetNs as $phpNs) {
-            $this->loader->addPsr4($phpNs . "\\", $this->phpDir . "/" . $this->slug($phpNs));
-        }
-    }
-
-    private static function delTree($dir)
-    {
-        $files = array_diff(scandir($dir), array('.', '..'));
-        foreach ($files as $file) {
-            (is_dir("$dir/$file")) ? self::delTree("$dir/$file") : unlink("$dir/$file");
-        }
-        return rmdir($dir);
-    }
-
-    protected function setNamespaces(AbstractConverter $converter)
-    {
-        foreach ($this->targetNs as $xmlNs => $phpNs) {
-            $converter->addNamespace($xmlNs, $phpNs);
-        }
-        foreach ($this->aliases as $alias) {
-            $converter->addAliasMapType(isset($alias[0]) ? $alias[0] : $alias['ns'], isset($alias[1]) ? $alias[1] : $alias['name'], isset($alias[2]) ? $alias[2] : $alias['php']);
+            $this->loader->addPsr4($phpNs . "\\", $this->phpDir . '/' . $this->slug($phpNs));
         }
     }
 
@@ -83,7 +65,16 @@ abstract class AbstractGenerator
         }
     }
 
-    public function buildSerializer($callback = null, array $metadataDirs = array())
+    private static function delTree($dir)
+    {
+        $files = array_diff(scandir($dir), ['.', '..']);
+        foreach ($files as $file) {
+            (is_dir("$dir/$file")) ? self::delTree("$dir/$file") : unlink("$dir/$file");
+        }
+        return rmdir($dir);
+    }
+
+    public function buildSerializer($callback = null, array $metadataDirs = [])
     {
         $serializerBuilder = \JMS\Serializer\SerializerBuilder::create();
         $serializerBuilder->configureHandlers(function (HandlerRegistryInterface $h) use ($callback, $serializerBuilder) {
@@ -98,7 +89,7 @@ abstract class AbstractGenerator
         }
 
         foreach ($metadataDirs as $php => $dir) {
-            if (!is_dir($dir)){
+            if (!is_dir($dir)) {
                 mkdir($dir, 0777, true);
             }
             $serializerBuilder->addMetadataDir($dir, $php);
@@ -118,12 +109,22 @@ abstract class AbstractGenerator
         //$this->loader->unregister();
     }
 
+    protected function setNamespaces(AbstractConverter $converter)
+    {
+        foreach ($this->targetNs as $xmlNs => $phpNs) {
+            $converter->addNamespace($xmlNs, $phpNs);
+        }
+        foreach ($this->aliases as $alias) {
+            $converter->addAliasMapType(isset($alias[0]) ? $alias[0] : $alias['ns'], isset($alias[1]) ? $alias[1] : $alias['name'], isset($alias[2]) ? $alias[2] : $alias['php']);
+        }
+    }
+
     /**
      * @param $items
      */
     protected function writePHP(array $items)
     {
-        $paths = array();
+        $paths = [];
         foreach ($this->targetNs as $phpNs) {
             $paths[$phpNs . "\\"] = $this->phpDir . "/" . $this->slug($phpNs);
         }
@@ -140,7 +141,7 @@ abstract class AbstractGenerator
      */
     protected function writeJMS(array $items)
     {
-        $paths = array();
+        $paths = [];
         foreach ($this->targetNs as $phpNs) {
             $paths[$phpNs . "\\"] = $this->jmsDir . "/" . $this->slug($phpNs);
         }

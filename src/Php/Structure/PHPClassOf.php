@@ -1,12 +1,10 @@
 <?php
+
 namespace GoetasWebservices\Xsd\XsdToPhp\Php\Structure;
 
 class PHPClassOf extends PHPClass
 {
-
-    /**
-     * @var PHPArg
-     */
+    /**  @var PHPArg */
     protected $arg;
 
     /**
@@ -23,13 +21,13 @@ class PHPClassOf extends PHPClass
      */
     public function __toString()
     {
-        return "array of " . $this->arg;
+        return 'array of ' . $this->arg;
     }
 
     /**
      * @return PHPArg
      */
-    public function getArg()
+    public function getArg(): PHPArg
     {
         return $this->arg;
     }

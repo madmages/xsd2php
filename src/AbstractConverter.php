@@ -1,4 +1,5 @@
 <?php
+
 namespace GoetasWebservices\Xsd\XsdToPhp;
 
 use GoetasWebservices\XML\XSDReader\Schema\Element\ElementSingle;
@@ -15,52 +16,21 @@ abstract class AbstractConverter
 {
     use LoggerAwareTrait;
 
-    protected $baseSchemas = array(
+    protected $baseSchemas = [
         'http://www.w3.org/2001/XMLSchema',
         'http://www.w3.org/XML/1998/namespace'
-    );
+    ];
 
-    protected $namespaces = array(
-        'http://www.w3.org/2001/XMLSchema' => '',
+    protected $namespaces = [
+        'http://www.w3.org/2001/XMLSchema'     => '',
         'http://www.w3.org/XML/1998/namespace' => ''
-    );
-
+    ];
+    protected $typeAliases = [];
+    protected $aliasCache = [];
     /**
      * @var \GoetasWebservices\Xsd\XsdToPhp\Naming\NamingStrategy
      */
     private $namingStrategy;
-
-    public abstract function convert(array $schemas);
-
-    protected $typeAliases = array();
-
-    protected $aliasCache = array();
-
-    public function addAliasMap($ns, $name, callable $handler)
-    {
-        $this->logger->info("Added map $ns $name");
-        $this->typeAliases[$ns][$name] = $handler;
-    }
-
-    public function addAliasMapType($ns, $name, $type)
-    {
-        $this->addAliasMap($ns, $name, function () use ($type) {
-            return $type;
-        });
-    }
-
-    public function getTypeAlias($type, Schema $schemapos = null)
-    {
-        $schema = $schemapos ?: $type->getSchema();
-
-        $cid = $schema->getTargetNamespace() . "|" . $type->getName();
-        if (isset($this->aliasCache[$cid])) {
-            return $this->aliasCache[$cid];
-        }
-        if (isset($this->typeAliases[$schema->getTargetNamespace()][$type->getName()])) {
-            return $this->aliasCache[$cid] = call_user_func($this->typeAliases[$schema->getTargetNamespace()][$type->getName()], $type);
-        }
-    }
 
     public function __construct(NamingStrategy $namingStrategy, LoggerInterface $logger = null)
     {
@@ -179,12 +149,32 @@ abstract class AbstractConverter
         });
     }
 
-    /**
-     * @return \GoetasWebservices\Xsd\XsdToPhp\Naming\NamingStrategy
-     */
-    protected function getNamingStrategy()
+    public function addAliasMap($ns, $name, callable $handler)
     {
-        return $this->namingStrategy;
+        $this->logger->info("Added map $ns $name");
+        $this->typeAliases[$ns][$name] = $handler;
+    }
+
+    abstract public function convert(array $schemas);
+
+    public function addAliasMapType($ns, $name, $type): void
+    {
+        $this->addAliasMap($ns, $name, function () use ($type) {
+            return $type;
+        });
+    }
+
+    public function getTypeAlias($type, Schema $schemapos = null)
+    {
+        $schema = $schemapos ?: $type->getSchema();
+
+        $cid = $schema->getTargetNamespace() . '|' . $type->getName();
+        if (isset($this->aliasCache[$cid])) {
+            return $this->aliasCache[$cid];
+        }
+        if (isset($this->typeAliases[$schema->getTargetNamespace()][$type->getName()])) {
+            return $this->aliasCache[$cid] = call_user_func($this->typeAliases[$schema->getTargetNamespace()][$type->getName()], $type);
+        }
     }
 
     public function addNamespace($ns, $phpNamespace)
@@ -192,6 +182,19 @@ abstract class AbstractConverter
         $this->logger->info("Added ns mapping $ns, $phpNamespace");
         $this->namespaces[$ns] = $phpNamespace;
         return $this;
+    }
+
+    public function getNamespaces()
+    {
+        return $this->namespaces;
+    }
+
+    /**
+     * @return \GoetasWebservices\Xsd\XsdToPhp\Naming\NamingStrategy
+     */
+    protected function getNamingStrategy()
+    {
+        return $this->namingStrategy;
     }
 
     protected function cleanName($name)
@@ -231,11 +234,6 @@ abstract class AbstractConverter
         if ($element instanceof ElementSingle && ($element->getMax() > 1 || $element->getMax() === -1)) {
             return $element;
         }
-    }
-
-    public function getNamespaces()
-    {
-        return $this->namespaces;
     }
 
 }

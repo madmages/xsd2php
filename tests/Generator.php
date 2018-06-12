@@ -1,4 +1,5 @@
 <?php
+
 namespace GoetasWebservices\Xsd\XsdToPhp\Tests;
 
 use GoetasWebservices\Xsd\XsdToPhp\Jms\YamlConverter;
@@ -9,17 +10,17 @@ class Generator extends AbstractGenerator
     public function generate(array $schemas)
     {
         $this->cleanDirectories();
-        
+
         $this->writeJMS($this->generateJMSFiles($schemas));
         $this->writePHP($this->generatePHPFiles($schemas));
     }
 
-    public function getData(array $schemas)
+    protected function generateJMSFiles(array $schemas)
     {
-        $php = $this->generatePHPFiles($schemas);
-        $jms = $this->generateJMSFiles($schemas);
-
-        return [$php, $jms];
+        $converter = new YamlConverter($this->namingStrategy);
+        $this->setNamespaces($converter);
+        $items = $converter->convert($schemas);
+        return $items;
     }
 
     protected function generatePHPFiles(array $schemas)
@@ -30,11 +31,11 @@ class Generator extends AbstractGenerator
         return $items;
     }
 
-    protected function generateJMSFiles(array $schemas)
+    public function getData(array $schemas)
     {
-        $converter = new YamlConverter($this->namingStrategy);
-        $this->setNamespaces($converter);
-        $items = $converter->convert($schemas);
-        return $items;
+        $php = $this->generatePHPFiles($schemas);
+        $jms = $this->generateJMSFiles($schemas);
+
+        return [$php, $jms];
     }
 }

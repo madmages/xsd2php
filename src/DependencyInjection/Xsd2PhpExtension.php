@@ -1,4 +1,5 @@
 <?php
+
 namespace GoetasWebservices\Xsd\XsdToPhp\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
@@ -9,12 +10,18 @@ use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 class Xsd2PhpExtension extends Extension
 {
 
-    public function load(array $configs, ContainerBuilder $container)
+    /**
+     * @param array $configs
+     * @param ContainerBuilder $container
+     * @throws \Exception
+     */
+    public function load(array $configs, ContainerBuilder $container): void
     {
         $xml = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $xml->load('services.xml');
 
         $configuration = new Configuration();
+        /** @var array[] $config */
         $config = $this->processConfiguration($configuration, $configs);
         foreach ($configs as $subConfig) {
             $config = array_merge($config, $subConfig);
@@ -40,9 +47,11 @@ class Xsd2PhpExtension extends Extension
             foreach ($config['namespaces'] as $xml => $php) {
                 $converter->addMethodCall('addNamespace', [$xml, self::sanitizePhp($php)]);
             }
+
+            /** @var array $data */
             foreach ($config['aliases'] as $xml => $data) {
-                foreach ($data as $type => $php) {
-                    $converter->addMethodCall('addAliasMapType', [$xml, $type, self::sanitizePhp($php)]);
+                foreach ($data as $dtype => $php) {
+                    $converter->addMethodCall('addAliasMapType', [$xml, $dtype, self::sanitizePhp($php)]);
                 }
             }
         }
@@ -52,10 +61,10 @@ class Xsd2PhpExtension extends Extension
 
     protected static function sanitizePhp($ns)
     {
-        return strtr($ns, '/', '\\');
+        return str_replace('/', '\\', $ns);
     }
 
-    public function getAlias()
+    public function getAlias(): string
     {
         return 'xsd2php';
     }

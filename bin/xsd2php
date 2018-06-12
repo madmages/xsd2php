@@ -12,15 +12,20 @@ foreach ($paths as $path) {
 }
 
 use GoetasWebservices\Xsd\XsdToPhp\Command\Convert;
+use GoetasWebservices\Xsd\XsdToPhp\DependencyInjection\Xsd2PhpExtension;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-$container = new \Symfony\Component\DependencyInjection\ContainerBuilder();
-$container->registerExtension(new \GoetasWebservices\Xsd\XsdToPhp\DependencyInjection\Xsd2PhpExtension());
+$container = new ContainerBuilder();
+$container->registerExtension(new Xsd2PhpExtension());
 
-$output = new \Symfony\Component\Console\Output\ConsoleOutput();
-$container->set('logger', new \Symfony\Component\Console\Logger\ConsoleLogger($output));
+$output = new ConsoleOutput();
+$container->set('logger', new ConsoleLogger($output));
 error_reporting(error_reporting() & ~E_NOTICE);
-$cli = new Application('Convert XSD to PHP classes Command Line Interface', "2.0");
+$cli = new Application('Convert XSD to PHP classes Command Line Interface', '2.0');
 $cli->setCatchExceptions(true);
 $cli->add(new Convert($container));
+
 $cli->run(null, $output);

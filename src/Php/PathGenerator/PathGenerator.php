@@ -1,4 +1,5 @@
 <?php
+
 namespace GoetasWebservices\Xsd\XsdToPhp\Php\PathGenerator;
 
 use Zend\Code\Generator\ClassGenerator;
