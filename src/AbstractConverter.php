@@ -1,13 +1,13 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp;
+namespace Madmages\Xsd\XsdToPhp;
 
 use GoetasWebservices\XML\XSDReader\Schema\Element\ElementSingle;
 use GoetasWebservices\XML\XSDReader\Schema\Schema;
 use GoetasWebservices\XML\XSDReader\Schema\Type\ComplexType;
 use GoetasWebservices\XML\XSDReader\Schema\Type\SimpleType;
 use GoetasWebservices\XML\XSDReader\Schema\Type\Type;
-use GoetasWebservices\Xsd\XsdToPhp\Naming\NamingStrategy;
+use Madmages\Xsd\XsdToPhp\Naming\NamingStrategy;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -28,7 +28,7 @@ abstract class AbstractConverter
     protected $typeAliases = [];
     protected $aliasCache = [];
     /**
-     * @var \GoetasWebservices\Xsd\XsdToPhp\Naming\NamingStrategy
+     * @var \Madmages\Xsd\XsdToPhp\Naming\NamingStrategy
      */
     private $namingStrategy;
 
@@ -190,7 +190,7 @@ abstract class AbstractConverter
     }
 
     /**
-     * @return \GoetasWebservices\Xsd\XsdToPhp\Naming\NamingStrategy
+     * @return \Madmages\Xsd\XsdToPhp\Naming\NamingStrategy
      */
     protected function getNamingStrategy()
     {

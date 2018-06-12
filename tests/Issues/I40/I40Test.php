@@ -1,13 +1,13 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Tests\Issues\I40;
+namespace Madmages\Xsd\XsdToPhp\Tests\Issues\I40;
 
 use GoetasWebservices\XML\XSDReader\SchemaReader;
-use GoetasWebservices\Xsd\XsdToPhp\Jms\YamlConverter;
-use GoetasWebservices\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
-use GoetasWebservices\Xsd\XsdToPhp\Php\PhpConverter;
-use GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPClass;
-use GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPProperty;
+use Madmages\Xsd\XsdToPhp\Jms\YamlConverter;
+use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\Php\PhpConverter;
+use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
+use Madmages\Xsd\XsdToPhp\Php\Structure\PHPProperty;
 
 class I40Test extends \PHPUnit_Framework_TestCase
 {

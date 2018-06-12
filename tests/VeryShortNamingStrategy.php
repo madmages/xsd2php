@@ -1,10 +1,10 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Tests;
+namespace Madmages\Xsd\XsdToPhp\Tests;
 
 use Doctrine\Common\Inflector\Inflector;
 use GoetasWebservices\XML\XSDReader\Schema\Type\Type;
-use GoetasWebservices\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
 
 /**
  * The OTA psr4 class paths can exceed windows max dir length

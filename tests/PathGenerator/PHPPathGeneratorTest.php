@@ -1,8 +1,8 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Tests\Php\PathGenerator;
+namespace Madmages\Xsd\XsdToPhp\Tests\Php\PathGenerator;
 
-use GoetasWebservices\Xsd\XsdToPhp\Php\PathGenerator\Psr4PathGenerator;
+use Madmages\Xsd\XsdToPhp\Php\PathGenerator\Psr4PathGenerator;
 use Zend\Code\Generator\ClassGenerator;
 
 class PHPPathGeneratorTest extends \PHPUnit_Framework_TestCase
@@ -25,7 +25,7 @@ class PHPPathGeneratorTest extends \PHPUnit_Framework_TestCase
 
     public function testNoNs()
     {
-        $this->setExpectedException('GoetasWebservices\Xsd\XsdToPhp\PathGenerator\PathGeneratorException');
+        $this->setExpectedException('Madmages\Xsd\XsdToPhp\PathGenerator\PathGeneratorException');
         $generator = new Psr4PathGenerator([
             'myns\\' => $this->tmpdir
         ]);

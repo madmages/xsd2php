@@ -1,6 +1,6 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Php;
+namespace Madmages\Xsd\XsdToPhp\Php;
 
 class Types
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Command;
+namespace Madmages\Xsd\XsdToPhp\Command;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Config\Loader\DelegatingLoader;

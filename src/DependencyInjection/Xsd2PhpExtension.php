@@ -1,6 +1,6 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\DependencyInjection;
+namespace Madmages\Xsd\XsdToPhp\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;

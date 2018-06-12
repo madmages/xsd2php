@@ -1,9 +1,9 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Tests\Issues\I40;
+namespace Madmages\Xsd\XsdToPhp\Tests\Issues\I40;
 
 use GoetasWebservices\XML\XSDReader\SchemaReader;
-use GoetasWebservices\Xsd\XsdToPhp\Tests\Generator;
+use Madmages\Xsd\XsdToPhp\Tests\Generator;
 
 class I43Test extends \PHPUnit_Framework_TestCase
 {

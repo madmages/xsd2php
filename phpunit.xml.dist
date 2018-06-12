@@ -15,7 +15,7 @@
          stopOnSkipped="false"
          verbose="false">
     <testsuites>
-        <testsuite name="Goetas XSD to PHP Test Suite">
+        <testsuite name="XSD to PHP Test Suite">
             <directory>./tests</directory>
         </testsuite>
     </testsuites>

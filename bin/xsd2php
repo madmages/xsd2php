@@ -11,8 +11,8 @@ foreach ($paths as $path) {
     }
 }
 
-use GoetasWebservices\Xsd\XsdToPhp\Command\Convert;
-use GoetasWebservices\Xsd\XsdToPhp\DependencyInjection\Xsd2PhpExtension;
+use Madmages\Xsd\XsdToPhp\Command\Convert;
+use Madmages\Xsd\XsdToPhp\DependencyInjection\Xsd2PhpExtension;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\ConsoleOutput;

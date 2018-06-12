@@ -1,8 +1,8 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Writer;
+namespace Madmages\Xsd\XsdToPhp\Writer;
 
-use GoetasWebservices\Xsd\XsdToPhp\Jms\PathGenerator\PathGenerator;
+use Madmages\Xsd\XsdToPhp\Jms\PathGenerator\PathGenerator;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;

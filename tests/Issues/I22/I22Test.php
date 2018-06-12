@@ -1,10 +1,10 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Tests\Issues\I22;
+namespace Madmages\Xsd\XsdToPhp\Tests\Issues\I22;
 
 use GoetasWebservices\XML\XSDReader\SchemaReader;
-use GoetasWebservices\Xsd\XsdToPhp\Jms\YamlConverter;
-use GoetasWebservices\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\Jms\YamlConverter;
+use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
 
 class I22Test extends \PHPUnit_Framework_TestCase
 {

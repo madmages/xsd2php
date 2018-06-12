@@ -1,6 +1,6 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Tests\Converter\JMS;
+namespace Madmages\Xsd\XsdToPhp\Tests\Converter\JMS;
 
 class Xsd2PhpGroupTest extends Xsd2JmsBase
 {

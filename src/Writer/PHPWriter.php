@@ -1,9 +1,9 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Writer;
+namespace Madmages\Xsd\XsdToPhp\Writer;
 
-use GoetasWebservices\Xsd\XsdToPhp\Php\ClassGenerator;
-use GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPClass;
+use Madmages\Xsd\XsdToPhp\Php\ClassGenerator;
+use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;

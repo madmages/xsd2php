@@ -1,6 +1,6 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Php\Structure;
+namespace Madmages\Xsd\XsdToPhp\Php\Structure;
 
 class PHPClassOf extends PHPClass
 {

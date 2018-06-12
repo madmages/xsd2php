@@ -1,6 +1,6 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Jms\PathGenerator;
+namespace Madmages\Xsd\XsdToPhp\Jms\PathGenerator;
 
 interface PathGenerator
 {

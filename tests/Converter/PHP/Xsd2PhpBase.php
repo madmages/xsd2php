@@ -1,10 +1,10 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Tests\Converter\PHP;
+namespace Madmages\Xsd\XsdToPhp\Tests\Converter\PHP;
 
 use GoetasWebservices\XML\XSDReader\SchemaReader;
-use GoetasWebservices\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
-use GoetasWebservices\Xsd\XsdToPhp\Php\PhpConverter;
+use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\Php\PhpConverter;
 
 abstract class Xsd2PhpBase extends \PHPUnit_Framework_TestCase
 {

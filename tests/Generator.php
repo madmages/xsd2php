@@ -1,9 +1,9 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Tests;
+namespace Madmages\Xsd\XsdToPhp\Tests;
 
-use GoetasWebservices\Xsd\XsdToPhp\Jms\YamlConverter;
-use GoetasWebservices\Xsd\XsdToPhp\Php\PhpConverter;
+use Madmages\Xsd\XsdToPhp\Jms\YamlConverter;
+use Madmages\Xsd\XsdToPhp\Php\PhpConverter;
 
 class Generator extends AbstractGenerator
 {

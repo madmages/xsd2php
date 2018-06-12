@@ -1,6 +1,6 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Writer;
+namespace Madmages\Xsd\XsdToPhp\Writer;
 
 abstract class Writer
 {

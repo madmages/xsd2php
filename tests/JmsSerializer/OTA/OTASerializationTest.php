@@ -1,11 +1,10 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Tests\JmsSerializer\OTA;
+namespace Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA;
 
 use Doctrine\Common\Inflector\Inflector;
 use GoetasWebservices\XML\XSDReader\SchemaReader;
-use GoetasWebservices\Xsd\XsdToPhp\Jms\Handler\OTA\SchemaDateHandler;
-use GoetasWebservices\Xsd\XsdToPhp\Tests\Generator;
+use Madmages\Xsd\XsdToPhp\Tests\Generator;
 use GoetasWebservices\Xsd\XsdToPhpRuntime\Jms\Handler\BaseTypesHandler;
 use GoetasWebservices\Xsd\XsdToPhpRuntime\Jms\Handler\XmlSchemaDateHandler;
 use JMS\Serializer\Handler\HandlerRegistryInterface;
@@ -29,9 +28,9 @@ class OTASerializationTest extends \PHPUnit_Framework_TestCase
         self::$generator = new Generator([
             'http://www.opentravel.org/OTA/2003/05' => self::$namespace
         ], [
-            ['http://www.opentravel.org/OTA/2003/05', 'DateOrTimeOrDateTimeType', 'GoetasWebservices\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime'],
-            ['http://www.opentravel.org/OTA/2003/05', 'DateOrDateTimeType', 'GoetasWebservices\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime'],
-            ['http://www.opentravel.org/OTA/2003/05', 'TimeOrDateTimeType', 'GoetasWebservices\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime']
+            ['http://www.opentravel.org/OTA/2003/05', 'DateOrTimeOrDateTimeType', 'Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime'],
+            ['http://www.opentravel.org/OTA/2003/05', 'DateOrDateTimeType', 'Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime'],
+            ['http://www.opentravel.org/OTA/2003/05', 'TimeOrDateTimeType', 'Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime']
         ]);
 
         $reader = new SchemaReader();

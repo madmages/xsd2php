@@ -1,6 +1,6 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Php;
+namespace Madmages\Xsd\XsdToPhp\Php;
 
 use Exception;
 use GoetasWebservices\XML\XSDReader\Schema\Attribute\Attribute;
@@ -17,12 +17,12 @@ use GoetasWebservices\XML\XSDReader\Schema\Type\BaseComplexType;
 use GoetasWebservices\XML\XSDReader\Schema\Type\ComplexType;
 use GoetasWebservices\XML\XSDReader\Schema\Type\SimpleType;
 use GoetasWebservices\XML\XSDReader\Schema\Type\Type;
-use GoetasWebservices\Xsd\XsdToPhp\AbstractConverter;
-use GoetasWebservices\Xsd\XsdToPhp\Naming\NamingStrategy;
-use GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPArg;
-use GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPClass;
-use GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPClassOf;
-use GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPProperty;
+use Madmages\Xsd\XsdToPhp\AbstractConverter;
+use Madmages\Xsd\XsdToPhp\Naming\NamingStrategy;
+use Madmages\Xsd\XsdToPhp\Php\Structure\PHPArg;
+use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
+use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClassOf;
+use Madmages\Xsd\XsdToPhp\Php\Structure\PHPProperty;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -266,7 +266,7 @@ class PhpConverter extends AbstractConverter
      * @param Type $type
      * @param string $name
      * @param PHPClass $parent_class
-     * @return \GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPClass
+     * @return \Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass
      * @throws Exception
      */
     private function visitTypeAnonymous(Type $type, string $name, PHPClass $parent_class): PHPClass
@@ -524,7 +524,7 @@ class PhpConverter extends AbstractConverter
      * @param Schema $schema
      * @param ElementSingle $element
      * @param bool $arrayize
-     * @return \GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPProperty
+     * @return \Madmages\Xsd\XsdToPhp\Php\Structure\PHPProperty
      * @throws Exception
      */
     private function visitElement(PHPClass $class, Schema $schema, ElementSingle $element, $arrayize = true): PHPProperty

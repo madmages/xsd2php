@@ -1,8 +1,8 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Tests\Converter;
+namespace Madmages\Xsd\XsdToPhp\Tests\Converter;
 
-use GoetasWebservices\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
 
 class AbstractXsdConverterTest extends \PHPUnit_Framework_TestCase
 {
@@ -15,7 +15,7 @@ class AbstractXsdConverterTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->converter = $this->getMockForAbstractClass('GoetasWebservices\Xsd\XsdToPhp\AbstractConverter', [new ShortNamingStrategy()]);
+        $this->converter = $this->getMockForAbstractClass('Madmages\Xsd\XsdToPhp\AbstractConverter', [new ShortNamingStrategy()]);
     }
 
     public function testAliases()

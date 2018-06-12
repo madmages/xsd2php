@@ -1,11 +1,11 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Tests\Issues\I57;
+namespace Madmages\Xsd\XsdToPhp\Tests\Issues\I57;
 
 use GoetasWebservices\XML\XSDReader\SchemaReader;
-use GoetasWebservices\Xsd\XsdToPhp\Jms\YamlConverter;
-use GoetasWebservices\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
-use GoetasWebservices\Xsd\XsdToPhp\Php\PhpConverter;
+use Madmages\Xsd\XsdToPhp\Jms\YamlConverter;
+use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\Php\PhpConverter;
 
 class I57Test extends \PHPUnit_Framework_TestCase
 {

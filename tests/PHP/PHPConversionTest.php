@@ -1,11 +1,12 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Tests\JmsSerializer\OTA;
+namespace Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA;
 
 use GoetasWebservices\XML\XSDReader\SchemaReader;
-use GoetasWebservices\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
-use GoetasWebservices\Xsd\XsdToPhp\Php\ClassGenerator;
-use GoetasWebservices\Xsd\XsdToPhp\Php\PhpConverter;
+use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\Php\ClassGenerator;
+use Madmages\Xsd\XsdToPhp\Php\PhpConverter;
+use Madmages\Xsd\XsdToPhp\Php\Types;
 
 class PHPConversionTest extends \PHPUnit_Framework_TestCase
 {
@@ -147,8 +148,8 @@ class PHPConversionTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($codegen->hasMethod('getId'));
         $this->assertTrue($codegen->hasMethod('setId'));
 
-        $this->assertNull($codegen->getMethod('issetId')->getParameters()['index']->getType());
-        $this->assertNull($codegen->getMethod('issetId')->getParameters()['index']->getType());
+        $this->assertSame(Types::INT, $codegen->getMethod('issetId')->getParameters()['index']->getType());
+        $this->assertSame(Types::INT, $codegen->getMethod('issetId')->getParameters()['index']->getType());
 
     }
 

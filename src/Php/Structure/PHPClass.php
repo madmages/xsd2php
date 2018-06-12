@@ -1,8 +1,8 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Php\Structure;
+namespace Madmages\Xsd\XsdToPhp\Php\Structure;
 
-use GoetasWebservices\Xsd\XsdToPhp\Php\Types;
+use Madmages\Xsd\XsdToPhp\Php\Types;
 
 class PHPClass
 {

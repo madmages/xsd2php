@@ -1,6 +1,6 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Tests\JmsSerializer\OTA;
+namespace Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA;
 
 use JMS\Serializer\Context;
 use JMS\Serializer\GraphNavigator;
@@ -25,13 +25,13 @@ class OTASchemaDateHandler implements SubscribingHandlerInterface
             [
                 'direction' => GraphNavigator::DIRECTION_DESERIALIZATION,
                 'format'    => 'xml',
-                'type'      => 'GoetasWebservices\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime',
+                'type'      => 'Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime',
                 'method'    => 'deserializeDateTime'
             ],
             [
                 'direction' => GraphNavigator::DIRECTION_SERIALIZATION,
                 'format'    => 'xml',
-                'type'      => 'GoetasWebservices\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime',
+                'type'      => 'Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime',
                 'method'    => 'serializeDateTime'
             ]
         ];

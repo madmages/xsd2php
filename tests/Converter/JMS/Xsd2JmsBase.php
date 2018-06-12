@@ -1,10 +1,10 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Tests\Converter\JMS;
+namespace Madmages\Xsd\XsdToPhp\Tests\Converter\JMS;
 
 use GoetasWebservices\XML\XSDReader\SchemaReader;
-use GoetasWebservices\Xsd\XsdToPhp\Jms\YamlConverter;
-use GoetasWebservices\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\Jms\YamlConverter;
+use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
 
 abstract class Xsd2JmsBase extends \PHPUnit_Framework_TestCase
 {
@@ -31,8 +31,8 @@ abstract class Xsd2JmsBase extends \PHPUnit_Framework_TestCase
     public function getBaseTypeConversions()
     {
         return [
-            ['xs:dateTime', 'DateTime', 'GoetasWebservices\\Xsd\\XsdToPhp\\XMLSchema\\DateTime'],
-            ['xs:date', 'DateTime', 'GoetasWebservices\\Xsd\\XsdToPhp\\XMLSchema\\Date'],
+            ['xs:dateTime', 'DateTime', 'Madmages\\Xsd\\XsdToPhp\\XMLSchema\\DateTime'],
+            ['xs:date', 'DateTime', 'Madmages\\Xsd\\XsdToPhp\\XMLSchema\\Date'],
         ];
     }
 

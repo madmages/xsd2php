@@ -1,8 +1,8 @@
 <?php
 
-namespace GoetasWebservices\Xsd\XsdToPhp\Php;
+namespace Madmages\Xsd\XsdToPhp\Php;
 
-use GoetasWebservices\Xsd\XsdToPhp\Php\Structure\PHPClass;
+use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
 
 class ClassData implements \ArrayAccess
 {
