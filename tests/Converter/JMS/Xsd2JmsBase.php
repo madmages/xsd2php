@@ -23,7 +23,7 @@ abstract class Xsd2JmsBase extends \PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->converter = new YamlConverter(new ShortNamingStrategy());
-        $this->converter->addNamespace('http://www.example.com', "Example");
+        $this->converter->addNamespace('http://www.example.com', 'Example');
 
         $this->reader = new SchemaReader();
     }
@@ -31,8 +31,8 @@ abstract class Xsd2JmsBase extends \PHPUnit_Framework_TestCase
     public function getBaseTypeConversions()
     {
         return [
-            ['xs:dateTime', 'DateTime', 'Madmages\\Xsd\\XsdToPhp\\XMLSchema\\DateTime'],
-            ['xs:date', 'DateTime', 'Madmages\\Xsd\\XsdToPhp\\XMLSchema\\Date'],
+            ['xs:dateTime', 'DateTime', 'GoetasWebservices\\Xsd\\XsdToPhp\\XMLSchema\\DateTime'],
+            ['xs:date', 'DateTime', 'GoetasWebservices\\Xsd\\XsdToPhp\\XMLSchema\\Date'],
         ];
     }
 

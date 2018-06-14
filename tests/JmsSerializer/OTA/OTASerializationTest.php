@@ -28,9 +28,9 @@ class OTASerializationTest extends \PHPUnit_Framework_TestCase
         self::$generator = new Generator([
             'http://www.opentravel.org/OTA/2003/05' => self::$namespace
         ], [
-            ['http://www.opentravel.org/OTA/2003/05', 'DateOrTimeOrDateTimeType', 'Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime'],
-            ['http://www.opentravel.org/OTA/2003/05', 'DateOrDateTimeType', 'Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime'],
-            ['http://www.opentravel.org/OTA/2003/05', 'TimeOrDateTimeType', 'Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime']
+            ['http://www.opentravel.org/OTA/2003/05', 'DateOrTimeOrDateTimeType', OTADateTime::class],
+            ['http://www.opentravel.org/OTA/2003/05', 'DateOrDateTimeType', OTADateTime::class],
+            ['http://www.opentravel.org/OTA/2003/05', 'TimeOrDateTimeType', OTADateTime::class]
         ]);
 
         $reader = new SchemaReader();
@@ -53,12 +53,12 @@ class OTASerializationTest extends \PHPUnit_Framework_TestCase
             $name = basename($file);
             $dir = dirname($file);
 
-            $name = str_replace(".xml", ".xsd", $name);
-            $name = preg_replace("/[0-9]+/", "", $name);
-            if (is_file($dir . "/" . $name)) {
+            $name = str_replace('.xml', '.xsd', $name);
+            $name = preg_replace('/\d+/', '', $name);
+            if (is_file($dir . '/' . $name)) {
                 $tests[$n][0] = $file;
-                $tests[$n][1] = $dir . "/" . $name;
-                $tests[$n][2] = self::$namespace . "\\" . Inflector::classify(str_replace(".xsd", "", $name));
+                $tests[$n][1] = $dir . '/' . $name;
+                $tests[$n][2] = self::$namespace . "\\" . Inflector::classify(str_replace('.xsd', '', $name));
             }
         }
         return $tests;
@@ -107,9 +107,7 @@ class OTASerializationTest extends \PHPUnit_Framework_TestCase
     protected function clearXML($xml)
     {
         $xml = str_replace("\r", "\n", $xml);
-        $xml = str_replace([
-            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
-        ], '', $xml);
+        $xml = str_replace('xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"', '', $xml);
         $xml = preg_replace('~xsi:[a-z]+="[^"]+"~msi', '', $xml);
 
         $xml = preg_replace("/" . preg_quote('<![CDATA[', '/') . "(.*?)" . preg_quote(']]>', '/') . "/mis", "\\1", $xml);

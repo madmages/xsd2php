@@ -25,13 +25,13 @@ class OTASchemaDateHandler implements SubscribingHandlerInterface
             [
                 'direction' => GraphNavigator::DIRECTION_DESERIALIZATION,
                 'format'    => 'xml',
-                'type'      => 'Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime',
+                'type'      => OTADateTime::class,
                 'method'    => 'deserializeDateTime'
             ],
             [
                 'direction' => GraphNavigator::DIRECTION_SERIALIZATION,
                 'format'    => 'xml',
-                'type'      => 'Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA\OTADateTime',
+                'type'      => OTADateTime::class,
                 'method'    => 'serializeDateTime'
             ]
         ];

@@ -2,6 +2,8 @@
 
 namespace Madmages\Xsd\XsdToPhp\Tests\Converter\PHP;
 
+use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
+
 class Xsd2PhpElementTest extends Xsd2PhpBase
 {
 
@@ -21,11 +23,11 @@ class Xsd2PhpElementTest extends Xsd2PhpBase
         $classes = $this->converter->convert([$this->reader->readString($content)]);
 
         $this->assertCount(1, $classes);
-        $this->assertInstanceOf('Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass', $classes['Example\ElementOne']);
+        $this->assertInstanceOf(PHPClass::class, $classes['Example\ElementOne']);
         $this->assertEquals('Example', $classes['Example\ElementOne']->getNamespace());
         $this->assertEquals('ElementOne', $classes['Example\ElementOne']->getName());
 
-        $this->assertInstanceOf('Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass', $classes['Example\ElementOne']->getExtends());
+        $this->assertInstanceOf(PHPClass::class, $classes['Example\ElementOne']->getExtends());
 
         $this->assertCount(0, $classes['Example\ElementOne']->getProperties());
         //$this->assertArrayHasKey("__value", $classes['Example\ElementOne']->getProperties());
@@ -56,11 +58,11 @@ class Xsd2PhpElementTest extends Xsd2PhpBase
         $classes = $this->converter->convert([$this->reader->readString($content)]);
 
         $this->assertCount(1, $classes);
-        $this->assertInstanceOf('Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass', $classes['Example\ElementOne']);
+        $this->assertInstanceOf(PHPClass::class, $classes['Example\ElementOne']);
         $this->assertEquals('Example', $classes['Example\ElementOne']->getNamespace());
         $this->assertEquals('ElementOne', $classes['Example\ElementOne']->getName());
 
-        $this->assertInstanceOf('Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass', $classes['Example\ElementOne']->getExtends());
+        $this->assertInstanceOf(PHPClass::class, $classes['Example\ElementOne']->getExtends());
 
         $this->assertCount(0, $classes['Example\ElementOne']->getProperties());
 
@@ -89,14 +91,14 @@ class Xsd2PhpElementTest extends Xsd2PhpBase
         $classes = $this->converter->convert([$this->reader->readString($content)]);
 
         $this->assertCount(1, $classes);
-        $this->assertInstanceOf('Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass', $classes['Example\ElementOne']);
+        $this->assertInstanceOf(PHPClass::class, $classes['Example\ElementOne']);
         $this->assertEquals('Example', $classes['Example\ElementOne']->getNamespace());
         $this->assertEquals('ElementOne', $classes['Example\ElementOne']->getName());
 
         $this->assertCount(0, $classes['Example\ElementOne']->getProperties());
 
         $extension = $classes['Example\ElementOne']->getExtends();
-        $this->assertInstanceOf('Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass', $extension);
+        $this->assertInstanceOf(PHPClass::class, $extension);
 
         $this->assertEquals('', $extension->getNamespace());
         $this->assertEquals($phpName, $extension->getName());
@@ -120,14 +122,14 @@ class Xsd2PhpElementTest extends Xsd2PhpBase
         $classes = $this->converter->convert([$this->reader->readString($content)]);
 
         $this->assertCount(1, $classes);
-        $this->assertInstanceOf('Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass', $classes['Example\ElementOne']);
+        $this->assertInstanceOf(PHPClass::class, $classes['Example\ElementOne']);
         $this->assertEquals('Example', $classes['Example\ElementOne']->getNamespace());
         $this->assertEquals('ElementOne', $classes['Example\ElementOne']->getName());
 
         $this->assertCount(0, $classes['Example\ElementOne']->getProperties());
 
         $extension = $classes['Example\ElementOne']->getExtends();
-        $this->assertInstanceOf('Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass', $extension);
+        $this->assertInstanceOf(PHPClass::class, $extension);
 
         $this->assertEquals('', $extension->getNamespace());
         $this->assertEquals($phpName, $extension->getName());

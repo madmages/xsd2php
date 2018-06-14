@@ -29,20 +29,20 @@ use RuntimeException;
 class PhpConverter extends AbstractConverter
 {
     /** @var ClassData[] */
-    private $classes;
+    private $class_datas;
 
     public function __construct(NamingStrategy $namingStrategy, LoggerInterface $loggerInterface = null)
     {
         parent::__construct($namingStrategy, $loggerInterface);
 
         $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'dateTime', function () {
-            return 'DateTime';
+            return \DateTime::class;
         });
         $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'time', function () {
-            return 'DateTime';
+            return \DateTime::class;
         });
         $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'date', function () {
-            return 'DateTime';
+            return \DateTime::class;
         });
         $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'anySimpleType', function () {
             return Types::MIXED;
@@ -60,7 +60,7 @@ class PhpConverter extends AbstractConverter
     public function convert(array $schemas): array
     {
         $visited = [];
-        $this->classes = [];
+        $this->class_datas = [];
         foreach ($schemas as $schema) {
             $this->navigate($schema, $visited);
         }
@@ -343,10 +343,13 @@ class PhpConverter extends AbstractConverter
     {
         $property = new PHPProperty();
         $property->setName($this->getNamingStrategy()->getPropertyName($attribute));
+        //todo switch to constant
+        $property->setIsNullable($attribute->getUse() === 'optional');
 
         /** @var Attribute $attribute */
         $attribute_type = $attribute->getType();
         if ($attribute_type === null) {
+            //todo to custom exception
             throw new \RuntimeException('null occur');
         }
 
@@ -600,12 +603,12 @@ class PhpConverter extends AbstractConverter
      */
     private function getTypes(): array
     {
-        uasort($this->classes, function (ClassData $a, ClassData $b) {
+        uasort($this->class_datas, function (ClassData $a, ClassData $b) {
             return strcmp($a->getClass()->getFullName(), $b->getClass()->getFullName());
         });
 
         $result = [];
-        foreach ($this->classes as $class_data) {
+        foreach ($this->class_datas as $class_data) {
             if (!$class_data->isSkip()) {
                 if (!$class = $class_data->getClass()) {
                     throw new \RuntimeException('null occur');
@@ -624,7 +627,7 @@ class PhpConverter extends AbstractConverter
      */
     private function getClassData(object $obj): ?ClassData
     {
-        return ($this->classes[spl_object_hash($obj)] ?? null);
+        return ($this->class_datas[spl_object_hash($obj)] ?? null);
     }
 
     /**
@@ -638,7 +641,7 @@ class PhpConverter extends AbstractConverter
             throw new RuntimeException('Hash exists');
         }
 
-        return ($this->classes[spl_object_hash($obj)] = new ClassData(new PHPClass()));
+        return ($this->class_datas[spl_object_hash($obj)] = new ClassData(new PHPClass()));
     }
 
     /**
