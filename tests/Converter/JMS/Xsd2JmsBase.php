@@ -3,8 +3,8 @@
 namespace Madmages\Xsd\XsdToPhp\Tests\Converter\JMS;
 
 use GoetasWebservices\XML\XSDReader\SchemaReader;
+use Madmages\Xsd\XsdToPhp\Components\Naming\ShortNamingStrategy;
 use Madmages\Xsd\XsdToPhp\Jms\YamlConverter;
-use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
 
 abstract class Xsd2JmsBase extends \PHPUnit_Framework_TestCase
 {

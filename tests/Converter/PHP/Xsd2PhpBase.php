@@ -3,7 +3,7 @@
 namespace Madmages\Xsd\XsdToPhp\Tests\Converter\PHP;
 
 use GoetasWebservices\XML\XSDReader\SchemaReader;
-use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\Components\Naming\ShortNamingStrategy;
 use Madmages\Xsd\XsdToPhp\Php\PhpConverter;
 
 abstract class Xsd2PhpBase extends \PHPUnit_Framework_TestCase

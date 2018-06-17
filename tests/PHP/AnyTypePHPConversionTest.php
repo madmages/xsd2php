@@ -3,14 +3,18 @@
 namespace Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA;
 
 use GoetasWebservices\XML\XSDReader\SchemaReader;
+use Madmages\Xsd\XsdToPhp\Components\Naming\ShortNamingStrategy;
 use Madmages\Xsd\XsdToPhp\Jms\YamlConverter;
-use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
 use Madmages\Xsd\XsdToPhp\Php\ClassGenerator;
 use Madmages\Xsd\XsdToPhp\Php\PhpConverter;
 
 class AnyTypePHPConversionTest extends \PHPUnit_Framework_TestCase
 {
 
+    /**
+     * @throws \Exception
+     * @throws \GoetasWebservices\XML\XSDReader\Exception\IOException
+     */
     public function testSimpleAnyTypePHP()
     {
         $xml = '
@@ -43,7 +47,10 @@ class AnyTypePHPConversionTest extends \PHPUnit_Framework_TestCase
     /**
      *
      * @param mixed $xml
+     * @param array $types
      * @return \Zend\Code\Generator\ClassGenerator[]
+     * @throws \Exception
+     * @throws \GoetasWebservices\XML\XSDReader\Exception\IOException
      */
     protected function getPhpClasses($xml, array $types = [])
     {
@@ -51,7 +58,7 @@ class AnyTypePHPConversionTest extends \PHPUnit_Framework_TestCase
         $creator->addNamespace('', 'Example');
 
         foreach ($types as $typeData) {
-            list($ns, $name, $type) = $typeData;
+            [$ns, $name, $type] = $typeData;
             $creator->addAliasMapType($ns, $name, $type);
         }
 
@@ -78,6 +85,9 @@ class AnyTypePHPConversionTest extends \PHPUnit_Framework_TestCase
         return $classes;
     }
 
+    /**
+     * @throws \GoetasWebservices\XML\XSDReader\Exception\IOException
+     */
     public function testSimpleAnyTypeYaml()
     {
         $xml = '
@@ -119,7 +129,9 @@ class AnyTypePHPConversionTest extends \PHPUnit_Framework_TestCase
     /**
      *
      * @param mixed $xml
+     * @param array $types
      * @return array[]
+     * @throws \Exception
      * @throws \GoetasWebservices\XML\XSDReader\Exception\IOException
      */
     protected function getYamlFiles($xml, array $types = [])

@@ -2,9 +2,8 @@
 
 namespace Madmages\Xsd\XsdToPhp\Tests;
 
-use Doctrine\Common\Inflector\Inflector;
 use GoetasWebservices\XML\XSDReader\Schema\Type\Type;
-use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\Components\Naming\ShortNamingStrategy;
 
 /**
  * The OTA psr4 class paths can exceed windows max dir length
@@ -16,7 +15,7 @@ class VeryShortNamingStrategy extends ShortNamingStrategy
      * @param Type $type
      * @return string
      */
-    public function getTypeName(Type $type)
+    public function getTypeName(Type $type): string
     {
         $name = $this->classify($type->getName());
 
@@ -32,22 +31,13 @@ class VeryShortNamingStrategy extends ShortNamingStrategy
     }
 
     /**
-     * @param string $name
-     * @return string
-     */
-    private function classify($name)
-    {
-        return Inflector::classify(str_replace(".", " ", $name));
-    }
-
-    /**
      * Suffix with 'A' instead of 'AType'
      * @param Type $type
-     * @param string $parentName
+     * @param string $parent_name
      * @return string
      */
-    public function getAnonymousTypeName(Type $type, $parentName)
+    public function getAnonymousTypeName(Type $type, $parent_name): string
     {
-        return $this->classify($parentName) . 'A';
+        return $this->classify($parent_name) . 'A';
     }
 }

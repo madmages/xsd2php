@@ -3,15 +3,14 @@
 namespace Madmages\Xsd\XsdToPhp\Tests;
 
 use Composer\Autoload\ClassLoader;
+use JMS\Serializer\Handler\HandlerRegistryInterface;
 use Madmages\Xsd\XsdToPhp\AbstractConverter;
+use Madmages\Xsd\XsdToPhp\Components\Writer\JMSWriter;
+use Madmages\Xsd\XsdToPhp\Components\Writer\PHPClassWriter;
+use Madmages\Xsd\XsdToPhp\Components\Writer\PHPWriter;
 use Madmages\Xsd\XsdToPhp\Jms\PathGenerator\Psr4PathGenerator as JmsPsr4PathGenerator;
-use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
 use Madmages\Xsd\XsdToPhp\Php\ClassGenerator;
 use Madmages\Xsd\XsdToPhp\Php\PathGenerator\Psr4PathGenerator as PhpPsr4PathGenerator;
-use Madmages\Xsd\XsdToPhp\Writer\JMSWriter;
-use Madmages\Xsd\XsdToPhp\Writer\PHPClassWriter;
-use Madmages\Xsd\XsdToPhp\Writer\PHPWriter;
-use JMS\Serializer\Handler\HandlerRegistryInterface;
 
 abstract class AbstractGenerator
 {

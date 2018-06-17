@@ -4,10 +4,10 @@ namespace Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA;
 
 use Doctrine\Common\Inflector\Inflector;
 use GoetasWebservices\XML\XSDReader\SchemaReader;
-use Madmages\Xsd\XsdToPhp\Tests\Generator;
 use GoetasWebservices\Xsd\XsdToPhpRuntime\Jms\Handler\BaseTypesHandler;
 use GoetasWebservices\Xsd\XsdToPhpRuntime\Jms\Handler\XmlSchemaDateHandler;
 use JMS\Serializer\Handler\HandlerRegistryInterface;
+use Madmages\Xsd\XsdToPhp\Tests\Generator;
 
 class OTASerializationTest extends \PHPUnit_Framework_TestCase
 {

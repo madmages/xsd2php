@@ -2,35 +2,39 @@
 
 namespace Madmages\Xsd\XsdToPhp\Jms\PathGenerator;
 
-use Madmages\Xsd\XsdToPhp\PathGenerator\PathGeneratorException;
-use Madmages\Xsd\XsdToPhp\PathGenerator\Psr4PathGenerator as Psr4PathGeneratorBase;
+use Madmages\Xsd\XsdToPhp\Components\PathGenerator\Psr4PathGenerator as Psr4PathGeneratorBase;
+use Madmages\Xsd\XsdToPhp\Config;
+use Madmages\Xsd\XsdToPhp\PathGenerator;
 
 class Psr4PathGenerator extends Psr4PathGeneratorBase implements PathGenerator
 {
+    protected function getDestinations(): array
+    {
+        return Config::getDestinationJMS();
+    }
+
     /**
      * @param array $yaml
      * @return string
-     * @throws PathGeneratorException
+     * @throws \RuntimeException
      */
-    public function getPath(array $yaml): string
+    public function getPath($yaml): string
     {
-        $ns = key($yaml);
+        $current_yaml_ns = key($yaml);
 
-        foreach ($this->namespaces as $namespace => $dir) {
-            $pos = strpos($ns, $namespace);
-
-            if ($pos === 0) {
-                if (!@mkdir($dir, 0777, true) && !is_dir($dir)) {
-                    throw new PathGeneratorException("Can't create the folder `{$dir}`");
+        foreach ($this->destinations as $namespace_php => $directory_path) {
+            // Directory path should be substring of php namespace
+            if (strpos($current_yaml_ns, $namespace_php) === 0) {
+                if (!is_dir($directory_path) && !mkdir($directory_path, 0777, true) && !is_dir($directory_path)) {
+                    throw new \RuntimeException(sprintf('Can`t create the folder `%s`', $directory_path));
                 }
 
-                $file_name = trim(strtr(substr($ns, strlen($namespace)), "\\/", '..'), '.');
+                $file_name = trim(strtr(substr($current_yaml_ns, strlen($directory_path)), "\\/", '..'), '.');
 
-                return "{$dir}/{$file_name}.yml";
+                return "{$directory_path}/{$file_name}.yml";
             }
         }
 
-        throw new PathGeneratorException("Unable to determine location to save JMS metadata for class `{$ns}`");
+        throw new \RuntimeException(sprintf('Unable to determine location to save JMS metadata for class `%s`', $current_yaml_ns));
     }
 }
-

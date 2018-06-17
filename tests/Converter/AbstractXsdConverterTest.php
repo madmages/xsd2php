@@ -2,7 +2,8 @@
 
 namespace Madmages\Xsd\XsdToPhp\Tests\Converter;
 
-use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\AbstractConverter;
+use Madmages\Xsd\XsdToPhp\Components\Naming\ShortNamingStrategy;
 
 class AbstractXsdConverterTest extends \PHPUnit_Framework_TestCase
 {
@@ -15,7 +16,7 @@ class AbstractXsdConverterTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->converter = $this->getMockForAbstractClass('Madmages\Xsd\XsdToPhp\AbstractConverter', [new ShortNamingStrategy()]);
+        $this->converter = $this->getMockForAbstractClass(AbstractConverter::class, [new ShortNamingStrategy()]);
     }
 
     public function testAliases()

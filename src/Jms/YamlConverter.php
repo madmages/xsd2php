@@ -19,16 +19,16 @@ use GoetasWebservices\XML\XSDReader\Schema\Type\ComplexType;
 use GoetasWebservices\XML\XSDReader\Schema\Type\SimpleType;
 use GoetasWebservices\XML\XSDReader\Schema\Type\Type;
 use Madmages\Xsd\XsdToPhp\AbstractConverter;
-use Madmages\Xsd\XsdToPhp\Naming\NamingStrategy;
+use Madmages\Xsd\XsdToPhp\NamingStrategy;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
 
 class YamlConverter extends AbstractConverter
 {
     private $classes = [];
 
-    public function __construct(NamingStrategy $namingStrategy)
+    public function __construct(NamingStrategy $naming_strategy)
     {
-        parent::__construct($namingStrategy);
+        parent::__construct($naming_strategy);
 
         $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'dateTime', function () {
             return "GoetasWebservices\Xsd\XsdToPhp\XMLSchema\DateTime";
@@ -153,7 +153,7 @@ class YamlConverter extends AbstractConverter
         $ns = $this->findPHPNamespace($type);
         $name = $this->getNamingStrategy()->getTypeName($type);
 
-        return $ns . "\\" . $name;
+        return $ns . PHPClass::NS_SLASH . $name;
     }
 
     /**
@@ -314,7 +314,7 @@ class YamlConverter extends AbstractConverter
 
             $name = $this->getNamingStrategy()->getAnonymousTypeName($type, $parentName);
 
-            $class[$parentClass . "\\" . $name] = &$data;
+            $class[$parentClass . PHPClass::NS_SLASH . $name] = &$data;
 
             $this->visitTypeBase($class, $data, $type, $parentName);
             $this->classes[spl_object_hash($type)]['class'] = &$class;
@@ -417,7 +417,7 @@ class YamlConverter extends AbstractConverter
     public function &visitElementDef(Schema $schema, ElementDef $element)
     {
         if (!isset($this->classes[spl_object_hash($element)])) {
-            $className = $this->findPHPNamespace($element) . "\\" . $this->getNamingStrategy()->getItemName($element);
+            $className = $this->findPHPNamespace($element) . PHPClass::NS_SLASH . $this->getNamingStrategy()->getItemName($element);
             $class = [];
             $data = [];
             $ns = $className;
@@ -610,7 +610,7 @@ class YamlConverter extends AbstractConverter
             $class_name = key($definition['class']);
             if (
                 (!isset($definition['skip']) || !$definition['skip'])
-                && strpos($class_name, '\\') !== false
+                && strpos($class_name, PHPClass::NS_SLASH) !== false
             ) {
                 $result[$class_name] = $definition['class'];
             }

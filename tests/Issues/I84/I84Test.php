@@ -3,7 +3,7 @@
 namespace Madmages\Xsd\XsdToPhp\Tests\Issues\I63;
 
 use GoetasWebservices\XML\XSDReader\SchemaReader;
-use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\Components\Naming\ShortNamingStrategy;
 use Madmages\Xsd\XsdToPhp\Php\PhpConverter;
 
 class I84Test extends \PHPUnit_Framework_TestCase

@@ -4,7 +4,8 @@ namespace Madmages\Xsd\XsdToPhp\Php;
 
 use Exception;
 use GoetasWebservices\XML\XSDReader\Schema\Attribute\Attribute;
-use GoetasWebservices\XML\XSDReader\Schema\Attribute\AttributeItem;
+use GoetasWebservices\XML\XSDReader\Schema\Attribute\AttributeDef;
+use GoetasWebservices\XML\XSDReader\Schema\Attribute\AttributeSingle;
 use GoetasWebservices\XML\XSDReader\Schema\Attribute\Group as AttributeGroup;
 use GoetasWebservices\XML\XSDReader\Schema\Element\Element;
 use GoetasWebservices\XML\XSDReader\Schema\Element\ElementDef;
@@ -18,12 +19,11 @@ use GoetasWebservices\XML\XSDReader\Schema\Type\ComplexType;
 use GoetasWebservices\XML\XSDReader\Schema\Type\SimpleType;
 use GoetasWebservices\XML\XSDReader\Schema\Type\Type;
 use Madmages\Xsd\XsdToPhp\AbstractConverter;
-use Madmages\Xsd\XsdToPhp\Naming\NamingStrategy;
+use Madmages\Xsd\XsdToPhp\NamingStrategy;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPArg;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClassOf;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPProperty;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 class PhpConverter extends AbstractConverter
@@ -31,9 +31,9 @@ class PhpConverter extends AbstractConverter
     /** @var ClassData[] */
     private $class_datas;
 
-    public function __construct(NamingStrategy $namingStrategy, LoggerInterface $loggerInterface = null)
+    public function __construct(NamingStrategy $naming_strategy)
     {
-        parent::__construct($namingStrategy, $loggerInterface);
+        parent::__construct($naming_strategy);
 
         $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'dateTime', function () {
             return \DateTime::class;
@@ -158,7 +158,7 @@ class PhpConverter extends AbstractConverter
         $schema = $type->getSchema();
 
         if ($className = $this->getTypeAlias($type)) {
-            if (($pos = strrpos($className, '\\')) !== false) {
+            if (($pos = strrpos($className, PHPClass::NS_SLASH)) !== false) {
                 return [
                     substr($className, $pos + 1),
                     substr($className, 0, $pos)
@@ -280,7 +280,7 @@ class PhpConverter extends AbstractConverter
 
             $class_data->getClass()
                 ->setName($this->getNamingStrategy()->getAnonymousTypeName($type, $name))
-                ->setNamespace($parent_class->getNamespace() . "\\" . $parent_class->getName())
+                ->setNamespace($parent_class->getNamespace() . PHPClass::NS_SLASH . $parent_class->getName())
                 ->setDoc($type->getDoc());
 
             $this->visitTypeBase($class_data->getClass(), $type);
@@ -335,16 +335,17 @@ class PhpConverter extends AbstractConverter
 
     /**
      * @param PHPClass $class
-     * @param AttributeItem $attribute
+     * @param AttributeSingle|AttributeDef $attribute
      * @return PHPProperty
      * @throws Exception
      */
-    private function visitAttribute(PHPClass $class, AttributeItem $attribute): PHPProperty
+    private function visitAttribute(PHPClass $class, $attribute): PHPProperty
     {
         $property = new PHPProperty();
         $property->setName($this->getNamingStrategy()->getPropertyName($attribute));
         //todo switch to constant
-        $property->setIsNullable($attribute->getUse() === 'optional');
+        $is_nullable = method_exists($attribute, 'getUse') ? $attribute->getUse() === 'optional' : true;
+        $property->setIsNullable($is_nullable);
 
         /** @var Attribute $attribute */
         $attribute_type = $attribute->getType();

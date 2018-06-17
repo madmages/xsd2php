@@ -3,7 +3,7 @@
 namespace Madmages\Xsd\XsdToPhp\Tests\JmsSerializer\OTA;
 
 use GoetasWebservices\XML\XSDReader\SchemaReader;
-use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\Components\Naming\ShortNamingStrategy;
 use Madmages\Xsd\XsdToPhp\Php\ClassGenerator;
 use Madmages\Xsd\XsdToPhp\Php\PhpConverter;
 use Madmages\Xsd\XsdToPhp\Php\Types;
@@ -42,6 +42,8 @@ class PHPConversionTest extends \PHPUnit_Framework_TestCase
      *
      * @param mixed $xml
      * @return \Zend\Code\Generator\ClassGenerator[]
+     * @throws \Exception
+     * @throws \GoetasWebservices\XML\XSDReader\Exception\IOException
      */
     protected function getClasses($xml)
     {

@@ -2,34 +2,31 @@
 
 namespace Madmages\Xsd\XsdToPhp\Command;
 
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\Config\Loader\DelegatingLoader;
-use Symfony\Component\Config\Loader\LoaderResolver;
+use GoetasWebservices\XML\XSDReader\SchemaReader;
+use Madmages\Xsd\XsdToPhp\App;
+use Madmages\Xsd\XsdToPhp\Components\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\Jms\PathGenerator\Psr4PathGenerator as Psr4PathGeneratorJMS;
+use Madmages\Xsd\XsdToPhp\NamingStrategy;
+use Madmages\Xsd\XsdToPhp\PathGenerator;
+use Madmages\Xsd\XsdToPhp\Php\PathGenerator\Psr4PathGenerator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
-use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
-use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
-use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 class Convert extends Command
 {
-    /** @var ContainerBuilder */
-    protected $container;
+    protected $reader;
 
     /**
      * Convert constructor.
-     * @param ContainerInterface $container
+     * @param SchemaReader $reader
      * @throws \Symfony\Component\Console\Exception\LogicException
      */
-    public function __construct(ContainerInterface $container)
+    public function __construct(SchemaReader $reader)
     {
-        $this->container = $container;
+        $this->reader = $reader;
         parent::__construct();
     }
 
@@ -48,56 +45,37 @@ class Convert extends Command
     }
 
     /**
-     * @see Command
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return int|null
-     * @throws ServiceNotFoundException
-     * @throws ServiceCircularReferenceException
-     * @throws InvalidArgumentException
-     * @throws \Symfony\Component\Config\Exception\FileLoaderLoadException
-     * @throws \Exception
+     * @throws \Symfony\Component\Console\Exception\InvalidArgumentException
+     * @throws \GoetasWebservices\XML\XSDReader\Exception\IOException
+     * @throws \Illuminate\Container\EntryNotFoundException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
      */
     protected function execute(InputInterface $input, OutputInterface $output): ?int
     {
-        $this->loadConfigurations($input->getArgument('config'));
+        /** @var string $config_file */
+        $config_file = $input->getArgument('config');
 
         /** @var string[] $src */
         $src = $input->getArgument('src');
 
         $schemas = [];
-        $reader = $this->container->get('goetas_webservices.xsd2php.schema_reader');
         foreach ($src as $file) {
-            $schemas[] = $reader->readFile($file);
+            $schemas[] = $this->reader->readFile($file);
         }
+
+        App::getInstance()->singleton(NamingStrategy::class, ShortNamingStrategy::class);
+        App::getInstance()->singleton(PathGenerator::class . App::PHP, Psr4PathGenerator::class);
+        App::getInstance()->singleton(PathGenerator::class . App::JMS, Psr4PathGeneratorJMS::class);
 
         $items = [];
-        foreach (['php', 'jms'] as $type) {
-            $items = $this->container
-                ->get('goetas_webservices.xsd2php.converter.' . $type)
-                ->convert($schemas);
-
-            $this->container
-                ->get('goetas_webservices.xsd2php.writer.' . $type)
-                ->write($items);
+        foreach ([App::PHP, App::JMS] as $type) {
+            App::convertAndWrite($type, $schemas);
         }
 
-        return count($items) ? 0 : 255;
-    }
-
-    /**
-     * @param $configFile
-     * @throws \Symfony\Component\Config\Exception\FileLoaderLoadException|\Exception
-     */
-    protected function loadConfigurations($configFile): void
-    {
-        $locator = new FileLocator('.');
-
-        $yaml = new YamlFileLoader($this->container, $locator);
-        $xml = new XmlFileLoader($this->container, $locator);
-
-        (new DelegatingLoader(new LoaderResolver([$yaml, $xml])))->load($configFile);
-
-        $this->container->compile();
+        return 0;
     }
 }

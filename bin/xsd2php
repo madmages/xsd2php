@@ -11,21 +11,13 @@ foreach ($paths as $path) {
     }
 }
 
-use Madmages\Xsd\XsdToPhp\Command\Convert;
-use Madmages\Xsd\XsdToPhp\DependencyInjection\Xsd2PhpExtension;
+use Illuminate\Container\Container;
+use Madmages\Xsd\XsdToPhp\Command\Convert as ConvertCommand;
 use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-$container = new ContainerBuilder();
-$container->registerExtension(new Xsd2PhpExtension());
-
-$output = new ConsoleOutput();
-$container->set('logger', new ConsoleLogger($output));
-error_reporting(error_reporting() & ~E_NOTICE);
 $cli = new Application('Convert XSD to PHP classes Command Line Interface', '2.0');
 $cli->setCatchExceptions(true);
-$cli->add(new Convert($container));
+$cli->add(Container::getInstance()->make(ConvertCommand::class));
 
-$cli->run(null, $output);
+$cli->run(null, new ConsoleOutput());

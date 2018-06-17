@@ -3,8 +3,8 @@
 namespace Madmages\Xsd\XsdToPhp\Tests\Issues\I22;
 
 use GoetasWebservices\XML\XSDReader\SchemaReader;
+use Madmages\Xsd\XsdToPhp\Components\Naming\ShortNamingStrategy;
 use Madmages\Xsd\XsdToPhp\Jms\YamlConverter;
-use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
 
 class I22Test extends \PHPUnit_Framework_TestCase
 {

@@ -3,8 +3,8 @@
 namespace Madmages\Xsd\XsdToPhp\Tests\Issues\I40;
 
 use GoetasWebservices\XML\XSDReader\SchemaReader;
+use Madmages\Xsd\XsdToPhp\Components\Naming\ShortNamingStrategy;
 use Madmages\Xsd\XsdToPhp\Jms\YamlConverter;
-use Madmages\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
 use Madmages\Xsd\XsdToPhp\Php\PhpConverter;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPProperty;

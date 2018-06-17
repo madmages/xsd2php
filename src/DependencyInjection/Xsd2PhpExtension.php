@@ -2,10 +2,12 @@
 
 namespace Madmages\Xsd\XsdToPhp\DependencyInjection;
 
+use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+use GoetasWebservices\XML\XSDReader\SchemaReader;
 
 class Xsd2PhpExtension extends Extension
 {
@@ -31,7 +33,7 @@ class Xsd2PhpExtension extends Extension
         $container->setDefinition('goetas_webservices.xsd2php.naming_convention', $definition);
 
 
-        $schemaReader = $container->getDefinition('goetas_webservices.xsd2php.schema_reader');
+        $schemaReader = $container->getDefinition(SchemaReader::class);
         foreach ($config['known_locations'] as $namespace => $location) {
             $schemaReader->addMethodCall('addKnownSchemaLocation', [$namespace, $location]);
         }
@@ -61,7 +63,7 @@ class Xsd2PhpExtension extends Extension
 
     protected static function sanitizePhp($ns)
     {
-        return str_replace('/', '\\', $ns);
+        return str_replace('/', PHPClass::NS_SLASH, $ns);
     }
 
     public function getAlias(): string
