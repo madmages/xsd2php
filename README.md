@@ -1,10 +1,5 @@
 xsd2php
 =======
-
-[![Build Status](https://travis-ci.org/madmages/xsd2php.svg?branch=master)](https://travis-ci.org/madmages/xsd2php)
-[![Code Coverage](https://scrutinizer-ci.com/g/madmages/xsd2php/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/madmages/xsd2php/?branch=master)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/madmages/xsd2php/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/madmages/xsd2php/?branch=master)
-
 Convert XSD/WSDL into PHP classes.
 
 XSD2PHP can also generate [JMS Serializer](http://jmsyst.com/libs/serializer) compatible metadata that can be used to serialize/unserialize the object instances.
