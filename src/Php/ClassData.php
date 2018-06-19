@@ -8,6 +8,7 @@ class ClassData implements \ArrayAccess
 {
     /** @var PHPClass */
     private $class;
+
     /** @var bool */
     private $skip;
 
@@ -28,7 +29,7 @@ class ClassData implements \ArrayAccess
     }
 
     /**
-     * @param mixed $offset
+     * @param string $offset
      * @return bool
      * @throws \RuntimeException
      */
@@ -39,7 +40,7 @@ class ClassData implements \ArrayAccess
     }
 
     /**
-     * @param mixed $offset
+     * @param string $offset
      * @return mixed
      * @throws \RuntimeException
      */
@@ -50,7 +51,7 @@ class ClassData implements \ArrayAccess
     }
 
     /**
-     * @param mixed $offset
+     * @param string $offset
      * @param mixed $value
      * @throws \RuntimeException
      */
@@ -67,7 +68,7 @@ class ClassData implements \ArrayAccess
     }
 
     /**
-     * @param $offset
+     * @param string $offset
      * @throws \RuntimeException
      */
     private function checkProperty($offset)

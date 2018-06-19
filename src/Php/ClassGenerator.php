@@ -3,6 +3,7 @@
 namespace Madmages\Xsd\XsdToPhp\Php;
 
 use Doctrine\Common\Inflector\Inflector;
+use Madmages\Xsd\XsdToPhp\Config;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClassOf;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPProperty;
@@ -17,6 +18,13 @@ use Zend\Code\Generator\PropertyGenerator;
 
 class ClassGenerator
 {
+    /** @var Config */
+    private $config;
+
+    public function __construct(Config $config)
+    {
+        $this->config = $config;
+    }
 
     /**
      * @param PHPClass $type
@@ -57,7 +65,7 @@ class ClassGenerator
         }
 
         if ($this->handleClassBody($zend_class, $type)) {
-            return $zend_class;
+            return $this->config->emitHandler(Config::HANDLERS_CLASS, $zend_class);
         }
 
         return null;
@@ -229,6 +237,7 @@ class ClassGenerator
         );
 
         foreach ($methods as $method) {
+            $method = $this->config->emitHandler(Config::HANDLERS_METHOD, $method);
             $zend_class->addMethodFromGenerator($method);
         }
     }

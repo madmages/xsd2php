@@ -1,10 +1,5 @@
 xsd2php
 =======
-
-[![Build Status](https://travis-ci.org/madmages/xsd2php.svg?branch=master)](https://travis-ci.org/madmages/xsd2php)
-[![Code Coverage](https://scrutinizer-ci.com/g/madmages/xsd2php/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/madmages/xsd2php/?branch=master)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/madmages/xsd2php/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/madmages/xsd2php/?branch=master)
-
 Convert XSD/WSDL into PHP classes.
 
 XSD2PHP can also generate [JMS Serializer](http://jmsyst.com/libs/serializer) compatible metadata that can be used to serialize/unserialize the object instances.
@@ -26,77 +21,30 @@ There is one recommended way to install xsd2php via [Composer](https://getcompos
   },
   "require-dev": {
       ..
-      "madmages/xsd2php":"1.0.0",
+      "madmages/xsd2php":"^1.1",
       ..
   },
 ```
 
-## Usage
+## Usage example
 
-With this example we will convert [OTA XSD definitions](http://opentravel.org/Specifications/OnlineXmlSchema.aspx)
-into PHP classes.
+```php
+use Madmages\Xsd\XsdToPhp\App;
+use Madmages\Xsd\XsdToPhp\Config;
 
-Suppose that you have all XSD files in `/home/my/ota`, first of all we need a configuration file 
-(as example `config.yml`) that will keep all the namespace and directory mappings information.
+include 'vendor/autoload.php';
 
+$config = (new Config)
+    ->addNamespace('http://zakupki.gov.ru/223fz/types/1', 'ZGR\\Types', 'classes', 'jms')
+    ->handleGeneratedClass(function ($class) {
+        return $class;
+    })
+    ->handleGeneratedMethod(function ($method) {
+        return $method;
+    });
 
-```yml
-# config.yml
-# Linux Users: PHP Namespaces use back slash \ rather than a forward slash /
-# So for destinations_php, the namespace would be TestNs\MyApp
-
-xsd2php:
-  namespaces:
-    'http://www.example.org/test/': 'TestNs\MyApp'
-  destinations_php: 
-    'TestNs\MyApp': soap/src
-#    'TestNs\MyApp': soap\src  #  on Windows
-  destinations_jms:
-    'TestNs\MyApp': soap/metadata
-#    'TestNs\MyApp': soap\metadata  #  on Windows    
-  aliases: # optional
-    'http://www.example.org/test/':
-      MyCustomXSDType:  'MyCustomMappedPHPType'
-  naming_strategy: short # optional and default
-  path_generator: psr4 # optional and default
+App::run(['xsd/Types.xsd'], $config);
 ```
-
-Here is an explanation on the meaning of each parameter:
-
-
-* `xsd2php.namespaces` (required) defines the mapping between XML namespaces and PHP namespaces.
- (in the example we have the `http://www.example.org/test/` XML namespace mapped to `TestNs\MyApp`)
-
-
-* `xsd2php.destinations_php` (required) specifies the directory where to save the PHP classes that belongs to 
- `TestNs\MyApp` PHP namespace. (in this example `TestNs\MyApp` classes will be saved into `soap/src` directory.
- 
-
-* `xsd2php.destinations_jms` (required) specifies the directory where to save JMS Serializer metadata files 
- that belongs to `TestNs\MyApp` PHP namespace. 
- (in this example `TestNs\MyApp` metadata will be saved into `soap/metadata` directory.
- 
- 
-* `xsd2php.aliases` (optional) specifies some mappings that are handled by custom JMS serializer handlers.
- Allows to specify to do not generate metadata for some XML types, and assign them directly a PHP class.
- For that PHP class is necessary to create a custom JMS serialize/deserialize handler.
- 
- 
-* `xsd2php.naming_strategy` (optional) specifies the naming strategy to use when converting XML names PHP classes.
-
-* `xsd2php.path_generator` (optional) specifies the strategy to use for path generation and file saving
- 
- 
-
-## Generate PHP classes and JMS metadata info
-
-```sh
-vendor/bin/xsd2php convert config.yml /home/my/ota/OTA_Air*.xsd
-
-```
-
-This command will generate PHP classes and JMS metadata files for all the XSD files matching `/home/my/ota/OTA_Air*.xsd`
-and using the configuration available in `config.yml`
 
 
 Serialize / Unserialize
@@ -151,16 +99,23 @@ If your XSD contains `xsd:anyType` or `xsd:anySimpleType` types you have to spec
 
 When you generate the JMS metadata you have to specify a custom handler:
 
+```php
+use Madmages\Xsd\XsdToPhp\App;
+use Madmages\Xsd\XsdToPhp\Config;
 
-```yml
-# config.yml
+include 'vendor/autoload.php';
 
-xsd2php:
-  ...
-  aliases: 
-    'http://www.w3.org/2001/XMLSchema':
-      anyType: 'MyCustomAnyTypeHandler'
-      anySimpleType: 'MyCustomAnySimpleTypeHandler'
+// aliases xsd_type => php_type
+$aliases = [
+    'anyType'       => 'MyCustomAnyTypeHandler'
+    'anySimpleType' => 'MyCustomAnySimpleTypeHandler'
+];
+
+$config = (new Config)
+        ->addNamespace('http://zakupki.gov.ru/223fz/types/1', 'ZGR\\Types', 'classes', 'jms', $aliases)
+
+App::run(['xsd/Types.xsd'], $config);
+      
 ```
 
 Now you have to create a custom serialization handler:

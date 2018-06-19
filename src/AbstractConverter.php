@@ -2,20 +2,15 @@
 
 namespace Madmages\Xsd\XsdToPhp;
 
+use GoetasWebservices\XML\XSDReader\Schema\Attribute\Attribute;
 use GoetasWebservices\XML\XSDReader\Schema\Element\ElementSingle;
 use GoetasWebservices\XML\XSDReader\Schema\Schema;
 use GoetasWebservices\XML\XSDReader\Schema\Type\ComplexType;
 use GoetasWebservices\XML\XSDReader\Schema\Type\SimpleType;
 use GoetasWebservices\XML\XSDReader\Schema\Type\Type;
-use Madmages\Xsd\XsdToPhp\Naming\NamingStrategy;
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 abstract class AbstractConverter
 {
-    use LoggerAwareTrait;
-
     protected $baseSchemas = [
         'http://www.w3.org/2001/XMLSchema',
         'http://www.w3.org/XML/1998/namespace'
@@ -27,135 +22,37 @@ abstract class AbstractConverter
     ];
     protected $typeAliases = [];
     protected $aliasCache = [];
-    /**
-     * @var \Madmages\Xsd\XsdToPhp\Naming\NamingStrategy
-     */
+
+    /** @var \Madmages\Xsd\XsdToPhp\NamingStrategy */
     private $namingStrategy;
 
-    public function __construct(NamingStrategy $namingStrategy, LoggerInterface $logger = null)
+    public function __construct(NamingStrategy $naming_strategy, Config $config)
     {
-        $this->namingStrategy = $namingStrategy;
-        $this->logger = $logger ?: new NullLogger();
+        $this->namespaces = array_replace($this->namespaces, $config->getNamespaces());
+        $this->namingStrategy = $naming_strategy;
 
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "gYearMonth", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "gMonthDay", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "gMonth", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "gYear", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "NMTOKEN", function (Type $type) {
-            return "string";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "NMTOKENS", function (Type $type) {
-            return "string";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "QName", function (Type $type) {
-            return "string";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "NCName", function (Type $type) {
-            return "string";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "decimal", function (Type $type) {
-            return "float";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "float", function (Type $type) {
-            return "float";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "double", function (Type $type) {
-            return "float";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "string", function (Type $type) {
-            return "string";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "normalizedString", function (Type $type) {
-            return "string";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "integer", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "int", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "unsignedInt", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "negativeInteger", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "positiveInteger", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "nonNegativeInteger", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "nonPositiveInteger", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "long", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "unsignedLong", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "short", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "boolean", function (Type $type) {
-            return "bool";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "nonNegativeInteger", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "positiveInteger", function (Type $type) {
-            return "int";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "language", function (Type $type) {
-            return "string";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "token", function (Type $type) {
-            return "string";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "anyURI", function (Type $type) {
-            return "string";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "byte", function (Type $type) {
-            return "string";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "duration", function (Type $type) {
-            return "DateInterval";
-        });
+        /** @var string[][] $default_types */
+        $default_types = array_replace(XSD2PHPTypes::TYPES, $config->getAliases());
 
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "ID", function (Type $type) {
-            return "string";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "IDREF", function (Type $type) {
-            return "string";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "IDREFS", function (Type $type) {
-            return "string";
-        });
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "Name", function (Type $type) {
-            return "string";
-        });
-
-        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "NCName", function (Type $type) {
-            return "string";
-        });
+        foreach ($default_types as $namespace => $types) {
+            foreach ($types as $xsd_type => $php_type) {
+                $this->addAliasMap($namespace, $xsd_type, function () use ($php_type) {
+                    return $php_type;
+                });
+            }
+        }
     }
 
-    public function addAliasMap($ns, $name, callable $handler)
-    {
-        $this->logger->info("Added map $ns $name");
-        $this->typeAliases[$ns][$name] = $handler;
-    }
-
+    /**
+     * @param Schema[] $schemas
+     * @return mixed
+     */
     abstract public function convert(array $schemas);
+
+    public function addAliasMap(string $namespace, string $xsd_type, callable $handler): void
+    {
+        $this->typeAliases[$namespace][$xsd_type] = $handler;
+    }
 
     public function addAliasMapType($ns, $name, $type): void
     {
@@ -164,76 +61,88 @@ abstract class AbstractConverter
         });
     }
 
-    public function getTypeAlias($type, Schema $schemapos = null)
+    /**
+     * @param Type|Attribute $type
+     * @param Schema|null $schema
+     * @return mixed
+     */
+    public function getTypeAlias($type, Schema $schema = null): ?string
     {
-        $schema = $schemapos ?: $type->getSchema();
+        $schema = $schema ?? $type->getSchema();
 
-        $cid = $schema->getTargetNamespace() . '|' . $type->getName();
-        if (isset($this->aliasCache[$cid])) {
-            return $this->aliasCache[$cid];
+        $alias_cache_key = $schema->getTargetNamespace() . '|' . $type->getName();
+        if (array_key_exists($alias_cache_key, $this->aliasCache)) {
+            return $this->aliasCache[$alias_cache_key];
         }
+
         if (isset($this->typeAliases[$schema->getTargetNamespace()][$type->getName()])) {
-            return $this->aliasCache[$cid] = call_user_func($this->typeAliases[$schema->getTargetNamespace()][$type->getName()], $type);
+            $this->aliasCache[$alias_cache_key] = call_user_func($this->typeAliases[$schema->getTargetNamespace()][$type->getName()], $type);
+        } else {
+            $this->aliasCache[$alias_cache_key] = null;
         }
+
+        return $this->aliasCache[$alias_cache_key];
     }
 
-    public function addNamespace($ns, $phpNamespace)
+    public function addNamespace(string $xsd_namespace, string $php_namespace): self
     {
-        $this->logger->info("Added ns mapping $ns, $phpNamespace");
-        $this->namespaces[$ns] = $phpNamespace;
+        $this->namespaces[$xsd_namespace] = $php_namespace;
+
         return $this;
     }
 
-    public function getNamespaces()
+    public function getNamespaces(): array
     {
         return $this->namespaces;
     }
 
-    /**
-     * @return \Madmages\Xsd\XsdToPhp\Naming\NamingStrategy
-     */
-    protected function getNamingStrategy()
+    protected function getNamingStrategy(): NamingStrategy
     {
         return $this->namingStrategy;
     }
 
-    protected function cleanName($name)
+    protected function cleanName(string $name): string
     {
-        return preg_replace("/<.*>/", "", $name);
+        return preg_replace('/<.*>/', '', $name);
     }
 
     /**
      * @param Type $type
      * @return \GoetasWebservices\XML\XSDReader\Schema\Type\Type|null
      */
-    protected function isArrayType(Type $type)
+    protected function isArrayType(Type $type): ?Type
     {
         if ($type instanceof SimpleType) {
             return $type->getList();
         }
+
+        return null;
     }
 
     /**
      * @param Type $type
      * @return \GoetasWebservices\XML\XSDReader\Schema\Element\ElementSingle|null
      */
-    protected function isArrayNestedElement(Type $type)
+    protected function isArrayNestedElement(Type $type): ?ElementSingle
     {
         if ($type instanceof ComplexType && !$type->getParent() && !$type->getAttributes() && count($type->getElements()) === 1) {
             $elements = $type->getElements();
             return $this->isArrayElement(reset($elements));
         }
+
+        return null;
     }
 
     /**
      * @param mixed $element
      * @return \GoetasWebservices\XML\XSDReader\Schema\Element\ElementSingle|null
      */
-    protected function isArrayElement($element)
+    protected function isArrayElement($element): ?ElementSingle
     {
         if ($element instanceof ElementSingle && ($element->getMax() > 1 || $element->getMax() === -1)) {
             return $element;
         }
-    }
 
+        return null;
+    }
 }
