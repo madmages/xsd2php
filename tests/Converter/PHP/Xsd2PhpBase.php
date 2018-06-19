@@ -23,7 +23,7 @@ abstract class Xsd2PhpBase extends \PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->converter = new PhpConverter(new ShortNamingStrategy());
-        $this->converter->addNamespace('http://www.example.com', "Example");
+        $this->converter->addNamespace('http://www.example.com', 'Example');
 
         $this->reader = new SchemaReader();
     }

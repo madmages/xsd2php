@@ -4,62 +4,110 @@ namespace Madmages\Xsd\XsdToPhp;
 
 class Config
 {
-    private static $configs = [
-        'namespaces'       => [
-            'http://zakupki.gov.ru/223fz/types/1' => 'ZGR',
-        ],
-        'destinations_php' => [
-            'ZGR' => 'dest',
-        ],
-        'destinations_jms' => [
-            'ZGR' => 'metadata',
-        ],
-        'aliases'          => [
-            'http://www.example.org/test/' =>
-                [
-                    'MyCustomXSDType' => 'MyCustomMappedPHPType',
-                ],
+    public const HANDLERS_CLASS = 'class';
+    public const HANDLERS_METHOD = 'method';
+
+    private $configs = [
+        'namespaces'       => [],
+        'destinations_php' => [],
+        'destinations_jms' => [],
+        'aliases'          => [],
+        'handlers'         => [
+            self::HANDLERS_CLASS  => [],
+            self::HANDLERS_METHOD => [],
         ],
         'naming_strategy'  => 'short',
         'path_generator'   => 'psr4',
     ];
 
-    public static function addNamespace(string $xsd_namespace, string $php_namespace): void
+    public function addNamespace(
+        string $xsd_namespace,
+        string $php_namespace,
+        string $path_php,
+        string $path_jms,
+        array $aliases = null
+    ): self
     {
-        self::$configs['namespaces'][$xsd_namespace] = $php_namespace;
+        $this->configs['namespaces'][$xsd_namespace] = $php_namespace;
+        $this->configs['destinations_jms'][$php_namespace] = $path_jms;
+        $this->configs['destinations_php'][$php_namespace] = $path_php;
+
+        if ($aliases) {
+            $this->configs['aliases'][$xsd_namespace] = $aliases;
+        }
+
+        return $this;
+    }
+
+    public function addAliases(string $namespace_xsd, array $types): self
+    {
+        $this->configs['aliases'][$namespace_xsd] = $types;
+
+        return $this;
+    }
+
+    public function handleGeneratedClass(callable $handler): self
+    {
+        return $this->addHandler(self::HANDLERS_CLASS, $handler);
+    }
+
+    public function handleGeneratedMethod(callable $handler): self
+    {
+        return $this->addHandler(self::HANDLERS_METHOD, $handler);
+    }
+
+    public function emitHandler(string $handlers_stack_name, $value)
+    {
+        $handlers = $this->configs['handlers'][$handlers_stack_name] ?? [];
+
+        foreach ($handlers as $handler) {
+            $value = $handler($value);
+        }
+
+        return $value;
     }
 
     /**
      * @return string[]
      */
-    public static function getNamespaces(): array
+    public function getNamespaces(): array
     {
-        return self::$configs['namespaces'];
-    }
-
-    public static function addDestinationPHP(string $php_namespace, string $path): void
-    {
-        self::$configs['destinations_php'][$php_namespace] = $path;
+        return $this->configs['namespaces'];
     }
 
     /**
      * @return string[]
      */
-    public static function getDestinationPHP(): array
+    public function getDestinationPHP(): array
     {
-        return self::$configs['destinations_php'];
-    }
-
-    public static function addDestinationJMS(string $php_namespace, string $path): void
-    {
-        self::$configs['destinations_php'][$php_namespace] = $path;
+        return $this->configs['destinations_php'];
     }
 
     /**
      * @return string[]
      */
-    public static function getDestinationJMS(): array
+    public function getDestinationJMS(): array
     {
-        return self::$configs['destinations_php'];
+        return $this->configs['destinations_jms'];
+    }
+
+    /**
+     * @param string|null $namespace_xsd
+     * @return string[]|string[][]
+     */
+    public function getAliases(string $namespace_xsd = null): array
+    {
+        if ($namespace_xsd) {
+            return $this->configs['aliases'][$namespace_xsd];
+        }
+
+        return $this->configs['aliases'];
+    }
+
+    private function addHandler(string $handler_type, callable $handler)
+    {
+        $this->configs['handlers'][$handler_type][] = $handler;
+
+        return $this;
     }
 }

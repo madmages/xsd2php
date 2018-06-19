@@ -26,12 +26,15 @@ abstract class AbstractConverter
     /** @var \Madmages\Xsd\XsdToPhp\NamingStrategy */
     private $namingStrategy;
 
-    public function __construct(NamingStrategy $naming_strategy)
+    public function __construct(NamingStrategy $naming_strategy, Config $config)
     {
-        $this->namespaces = array_replace($this->namespaces, Config::getNamespaces());
+        $this->namespaces = array_replace($this->namespaces, $config->getNamespaces());
         $this->namingStrategy = $naming_strategy;
 
-        foreach (XSD2PHPTypes::TYPES as $namespace => $types) {
+        /** @var string[][] $default_types */
+        $default_types = array_replace(XSD2PHPTypes::TYPES, $config->getAliases());
+
+        foreach ($default_types as $namespace => $types) {
             foreach ($types as $xsd_type => $php_type) {
                 $this->addAliasMap($namespace, $xsd_type, function () use ($php_type) {
                     return $php_type;
@@ -71,6 +74,7 @@ abstract class AbstractConverter
         if (array_key_exists($alias_cache_key, $this->aliasCache)) {
             return $this->aliasCache[$alias_cache_key];
         }
+
         if (isset($this->typeAliases[$schema->getTargetNamespace()][$type->getName()])) {
             $this->aliasCache[$alias_cache_key] = call_user_func($this->typeAliases[$schema->getTargetNamespace()][$type->getName()], $type);
         } else {

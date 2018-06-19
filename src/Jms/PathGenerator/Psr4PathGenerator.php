@@ -3,14 +3,13 @@
 namespace Madmages\Xsd\XsdToPhp\Jms\PathGenerator;
 
 use Madmages\Xsd\XsdToPhp\Components\PathGenerator\Psr4PathGenerator as Psr4PathGeneratorBase;
-use Madmages\Xsd\XsdToPhp\Config;
 use Madmages\Xsd\XsdToPhp\PathGenerator;
 
 class Psr4PathGenerator extends Psr4PathGeneratorBase implements PathGenerator
 {
     protected function getDestinations(): array
     {
-        return Config::getDestinationJMS();
+        return $this->config->getDestinationJMS();
     }
 
     /**

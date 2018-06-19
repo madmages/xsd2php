@@ -2,19 +2,24 @@
 
 namespace Madmages\Xsd\XsdToPhp\Components\PathGenerator;
 
+use Madmages\Xsd\XsdToPhp\Config;
+
 abstract class Psr4PathGenerator
 {
 
     protected $destinations = [];
+    protected $config;
 
     abstract protected function getDestinations(): array;
 
     /**
      * Psr4PathGenerator constructor.
+     * @param Config $config
      * @throws \RuntimeException
      */
-    public function __construct()
+    public function __construct(Config $config)
     {
+        $this->config = $config;
         $this->setTargets($this->getDestinations());
     }
 

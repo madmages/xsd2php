@@ -86,8 +86,8 @@ abstract class AbstractNamingStrategy implements NamingStrategy
         'xor',
     ];
 
-    protected function classify(string $name): string
+    protected function classify(?string $name): string
     {
-        return Inflector::classify(str_replace('.', ' ', $name));
+        return Inflector::classify(str_replace('.', ' ', $name ?? ''));
     }
 }

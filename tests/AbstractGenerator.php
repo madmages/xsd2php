@@ -5,6 +5,7 @@ namespace Madmages\Xsd\XsdToPhp\Tests;
 use Composer\Autoload\ClassLoader;
 use JMS\Serializer\Handler\HandlerRegistryInterface;
 use Madmages\Xsd\XsdToPhp\AbstractConverter;
+use Madmages\Xsd\XsdToPhp\Components\Naming\ShortNamingStrategy;
 use Madmages\Xsd\XsdToPhp\Components\Writer\JMSWriter;
 use Madmages\Xsd\XsdToPhp\Components\Writer\PHPClassWriter;
 use Madmages\Xsd\XsdToPhp\Components\Writer\PHPWriter;
@@ -47,11 +48,11 @@ abstract class AbstractGenerator
         return preg_replace('/[^a-z0-9]/', '_', strtolower($str));
     }
 
-    public function cleanDirectories()
+    public function cleanDirectories(): void
     {
         foreach ($this->targetNs as $phpNs) {
-            $phpDir = $this->phpDir . "/" . $this->slug($phpNs);
-            $jmsDir = $this->jmsDir . "/" . $this->slug($phpNs);
+            $phpDir = $this->phpDir . '/' . $this->slug($phpNs);
+            $jmsDir = $this->jmsDir . '/' . $this->slug($phpNs);
 
             foreach ([$phpDir, $jmsDir] as $dir) {
                 if (is_dir($dir)) {
@@ -66,9 +67,9 @@ abstract class AbstractGenerator
 
     private static function delTree($dir)
     {
-        $files = array_diff(scandir($dir), ['.', '..']);
+        $files = array_diff(scandir($dir, SCANDIR_SORT_NONE), ['.', '..']);
         foreach ($files as $file) {
-            (is_dir("$dir/$file")) ? self::delTree("$dir/$file") : unlink("$dir/$file");
+            is_dir("{$dir}/{$file}") ? self::delTree("{$dir}/{$file}") : unlink("{$dir}/{$file}");
         }
         return rmdir($dir);
     }

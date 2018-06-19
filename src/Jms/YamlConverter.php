@@ -19,6 +19,7 @@ use GoetasWebservices\XML\XSDReader\Schema\Type\ComplexType;
 use GoetasWebservices\XML\XSDReader\Schema\Type\SimpleType;
 use GoetasWebservices\XML\XSDReader\Schema\Type\Type;
 use Madmages\Xsd\XsdToPhp\AbstractConverter;
+use Madmages\Xsd\XsdToPhp\Config;
 use Madmages\Xsd\XsdToPhp\NamingStrategy;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
 
@@ -26,9 +27,9 @@ class YamlConverter extends AbstractConverter
 {
     private $classes = [];
 
-    public function __construct(NamingStrategy $naming_strategy)
+    public function __construct(NamingStrategy $naming_strategy, Config $config)
     {
-        parent::__construct($naming_strategy);
+        parent::__construct($naming_strategy, $config);
 
         $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'dateTime', function () {
             return "GoetasWebservices\Xsd\XsdToPhp\XMLSchema\DateTime";

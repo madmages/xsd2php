@@ -23,7 +23,7 @@ class AbstractXsdConverterTest extends \PHPUnit_Framework_TestCase
     {
         $f = function () {
         };
-        $this->converter->addAliasMap('http://www.example.com', "myType", $f);
+        $this->converter->addAliasMap('http://www.example.com', 'myType', $f);
 
         $handlers = \PHPUnit_Framework_Assert::readAttribute($this->converter, 'typeAliases');
 

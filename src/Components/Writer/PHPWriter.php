@@ -5,23 +5,18 @@ namespace Madmages\Xsd\XsdToPhp\Components\Writer;
 use Madmages\Xsd\XsdToPhp\FileWriter;
 use Madmages\Xsd\XsdToPhp\Php\ClassGenerator;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 class PHPWriter implements FileWriter
 {
-    use LoggerAwareTrait;
 
     /** @var PHPClassWriter PHPClassWriter */
     protected $class_writer;
     private $generator;
 
-    public function __construct(PHPClassWriter $class_writer, ClassGenerator $generator, LoggerInterface $logger = null)
+    public function __construct(PHPClassWriter $class_writer, ClassGenerator $generator)
     {
         $this->generator = $generator;
         $this->class_writer = $class_writer;
-        $this->logger = $logger ?: new NullLogger();
     }
 
     /**
