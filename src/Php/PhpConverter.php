@@ -25,6 +25,7 @@ use Madmages\Xsd\XsdToPhp\Php\Structure\PHPArg;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClassOf;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPProperty;
+use Madmages\Xsd\XsdToPhp\XMLSchema;
 use RuntimeException;
 
 class PhpConverter extends AbstractConverter
@@ -36,19 +37,19 @@ class PhpConverter extends AbstractConverter
     {
         parent::__construct($naming_strategy, $config);
 
-        $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'dateTime', function () {
+        $this->addAliasMap(XMLSchema::NAMESPACE, XMLSchema::TYPE_DATETIME, function () {
             return \DateTime::class;
         });
-        $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'time', function () {
+        $this->addAliasMap(XMLSchema::NAMESPACE, XMLSchema::TYPE_TIME, function () {
             return \DateTime::class;
         });
-        $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'date', function () {
+        $this->addAliasMap(XMLSchema::NAMESPACE, XMLSchema::TYPE_DATE, function () {
             return \DateTime::class;
         });
-        $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'anySimpleType', function () {
+        $this->addAliasMap(XMLSchema::NAMESPACE, XMLSchema::TYPE_ANYSIMPLETYPE, function () {
             return Types::MIXED;
         });
-        $this->addAliasMap('http://www.w3.org/2001/XMLSchema', 'anyType', function () {
+        $this->addAliasMap(XMLSchema::NAMESPACE, XMLSchema::TYPE_ANYTYPE, function () {
             return Types::MIXED;
         });
     }
@@ -652,6 +653,6 @@ class PhpConverter extends AbstractConverter
      */
     private function isInBaseSchema(Schema $schema): bool
     {
-        return in_array($schema->getTargetNamespace(), $this->baseSchemas, true);
+        return in_array($schema->getTargetNamespace(), $this->base_schemas, true);
     }
 }

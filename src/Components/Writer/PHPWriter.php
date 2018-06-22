@@ -2,11 +2,10 @@
 
 namespace Madmages\Xsd\XsdToPhp\Components\Writer;
 
-use Madmages\Xsd\XsdToPhp\FileWriter;
 use Madmages\Xsd\XsdToPhp\Php\ClassGenerator;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
 
-class PHPWriter implements FileWriter
+class PHPWriter
 {
 
     /** @var PHPClassWriter PHPClassWriter */

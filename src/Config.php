@@ -2,6 +2,9 @@
 
 namespace Madmages\Xsd\XsdToPhp;
 
+use Madmages\Xsd\XsdToPhp\Components\Naming\ShortNamingStrategy;
+use Madmages\Xsd\XsdToPhp\Components\PathGenerator\Psr4;
+
 class Config
 {
     public const HANDLERS_CLASS = 'class';
@@ -16,8 +19,8 @@ class Config
             self::HANDLERS_CLASS  => [],
             self::HANDLERS_METHOD => [],
         ],
-        'naming_strategy'  => 'short',
-        'path_generator'   => 'psr4',
+        'naming_strategy'  => ShortNamingStrategy::class,
+        'path_generator'   => Psr4::class,
     ];
 
     public function addNamespace(
@@ -109,5 +112,15 @@ class Config
         $this->configs['handlers'][$handler_type][] = $handler;
 
         return $this;
+    }
+
+    public function getNamingStrategy(): string
+    {
+        return $this->configs['naming_strategy'];
+    }
+
+    public function getPathGenerator(): string
+    {
+        return $this->configs['path_generator'];
     }
 }

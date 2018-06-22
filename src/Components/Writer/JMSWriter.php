@@ -2,17 +2,19 @@
 
 namespace Madmages\Xsd\XsdToPhp\Components\Writer;
 
-use Madmages\Xsd\XsdToPhp\FileWriter;
-use Madmages\Xsd\XsdToPhp\Jms\PathGenerator\Psr4PathGenerator;
+use Madmages\Xsd\XsdToPhp\PathGenerator;
 use Symfony\Component\Yaml\Dumper;
 
-class JMSWriter implements FileWriter
+class JMSWriter
 {
-    private $pathGenerator;
+    private $path_generator;
 
-    public function __construct(Psr4PathGenerator $pathGenerator)
+    /**
+     * @param PathGenerator $generator
+     */
+    public function __construct(PathGenerator $generator)
     {
-        $this->pathGenerator = $pathGenerator;
+        $this->path_generator = $generator;
     }
 
     /**
@@ -25,7 +27,7 @@ class JMSWriter implements FileWriter
         $dumper = new Dumper();
         foreach ($items as $item) {
             $source = $dumper->dump($item, 10000);
-            $path = $this->pathGenerator->getPath($item);
+            $path = $this->path_generator->getJMSPath($item);
             file_put_contents($path, $source);
         }
     }

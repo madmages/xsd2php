@@ -2,19 +2,20 @@
 
 namespace Madmages\Xsd\XsdToPhp\Components\Writer;
 
-use Madmages\Xsd\XsdToPhp\FileWriter;
+use Madmages\Xsd\XsdToPhp\PathGenerator;
 use Madmages\Xsd\XsdToPhp\Php\ClassGenerator;
-use Madmages\Xsd\XsdToPhp\Php\PathGenerator\Psr4PathGenerator;
 use Zend\Code\Generator\FileGenerator;
 
-class PHPClassWriter implements FileWriter
+class PHPClassWriter
 {
+    protected $path_generator;
 
-    protected $pathGenerator;
-
-    public function __construct(Psr4PathGenerator $pathGenerator)
+    /**
+     * @param PathGenerator $generator
+     */
+    public function __construct(PathGenerator $generator)
     {
-        $this->pathGenerator = $pathGenerator;
+        $this->path_generator = $generator;
     }
 
     /**
@@ -26,7 +27,7 @@ class PHPClassWriter implements FileWriter
     public function write(array $items): void
     {
         foreach ($items as $item) {
-            $path = $this->pathGenerator->getPath($item);
+            $path = $this->path_generator->getPHPPath($item);
 
             (new FileGenerator())
                 ->setFilename($path)

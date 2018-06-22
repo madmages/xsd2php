@@ -3,6 +3,7 @@
 namespace Madmages\Xsd\XsdToPhp;
 
 use GoetasWebservices\XML\XSDReader\Schema\Attribute\Attribute;
+use GoetasWebservices\XML\XSDReader\Schema\Element\Element;
 use GoetasWebservices\XML\XSDReader\Schema\Element\ElementSingle;
 use GoetasWebservices\XML\XSDReader\Schema\Schema;
 use GoetasWebservices\XML\XSDReader\Schema\Type\ComplexType;
@@ -11,25 +12,25 @@ use GoetasWebservices\XML\XSDReader\Schema\Type\Type;
 
 abstract class AbstractConverter
 {
-    protected $baseSchemas = [
-        'http://www.w3.org/2001/XMLSchema',
-        'http://www.w3.org/XML/1998/namespace'
+    protected $base_schemas = [
+        XMLSchema::NAMESPACE,
+        XMLSchema::NAMESPACE_OLD
     ];
 
     protected $namespaces = [
-        'http://www.w3.org/2001/XMLSchema'     => '',
-        'http://www.w3.org/XML/1998/namespace' => ''
+        XMLSchema::NAMESPACE     => '',
+        XMLSchema::NAMESPACE_OLD => ''
     ];
-    protected $typeAliases = [];
-    protected $aliasCache = [];
+    protected $type_aliases = [];
+    protected $alias_cache = [];
 
     /** @var \Madmages\Xsd\XsdToPhp\NamingStrategy */
-    private $namingStrategy;
+    private $naming_strategy;
 
     public function __construct(NamingStrategy $naming_strategy, Config $config)
     {
         $this->namespaces = array_replace($this->namespaces, $config->getNamespaces());
-        $this->namingStrategy = $naming_strategy;
+        $this->naming_strategy = $naming_strategy;
 
         /** @var string[][] $default_types */
         $default_types = array_replace(XSD2PHPTypes::TYPES, $config->getAliases());
@@ -49,20 +50,13 @@ abstract class AbstractConverter
      */
     abstract public function convert(array $schemas);
 
-    public function addAliasMap(string $namespace, string $xsd_type, callable $handler): void
+    public function addAliasMap(string $xsd_namespace, string $xsd_type, callable $handler): void
     {
-        $this->typeAliases[$namespace][$xsd_type] = $handler;
-    }
-
-    public function addAliasMapType($ns, $name, $type): void
-    {
-        $this->addAliasMap($ns, $name, function () use ($type) {
-            return $type;
-        });
+        $this->type_aliases[$xsd_namespace][$xsd_type] = $handler;
     }
 
     /**
-     * @param Type|Attribute $type
+     * @param \GoetasWebservices\XML\XSDReader\Schema\Item|Attribute|Type $type
      * @param Schema|null $schema
      * @return mixed
      */
@@ -71,39 +65,22 @@ abstract class AbstractConverter
         $schema = $schema ?? $type->getSchema();
 
         $alias_cache_key = $schema->getTargetNamespace() . '|' . $type->getName();
-        if (array_key_exists($alias_cache_key, $this->aliasCache)) {
-            return $this->aliasCache[$alias_cache_key];
+        if (array_key_exists($alias_cache_key, $this->alias_cache)) {
+            return $this->alias_cache[$alias_cache_key];
         }
 
-        if (isset($this->typeAliases[$schema->getTargetNamespace()][$type->getName()])) {
-            $this->aliasCache[$alias_cache_key] = call_user_func($this->typeAliases[$schema->getTargetNamespace()][$type->getName()], $type);
+        if (isset($this->type_aliases[$schema->getTargetNamespace()][$type->getName()])) {
+            $this->alias_cache[$alias_cache_key] = call_user_func($this->type_aliases[$schema->getTargetNamespace()][$type->getName()], $type);
         } else {
-            $this->aliasCache[$alias_cache_key] = null;
+            $this->alias_cache[$alias_cache_key] = null;
         }
 
-        return $this->aliasCache[$alias_cache_key];
-    }
-
-    public function addNamespace(string $xsd_namespace, string $php_namespace): self
-    {
-        $this->namespaces[$xsd_namespace] = $php_namespace;
-
-        return $this;
-    }
-
-    public function getNamespaces(): array
-    {
-        return $this->namespaces;
+        return $this->alias_cache[$alias_cache_key];
     }
 
     protected function getNamingStrategy(): NamingStrategy
     {
-        return $this->namingStrategy;
-    }
-
-    protected function cleanName(string $name): string
-    {
-        return preg_replace('/<.*>/', '', $name);
+        return $this->naming_strategy;
     }
 
     /**
@@ -119,14 +96,14 @@ abstract class AbstractConverter
         return null;
     }
 
-    /**
-     * @param Type $type
-     * @return \GoetasWebservices\XML\XSDReader\Schema\Element\ElementSingle|null
-     */
-    protected function isArrayNestedElement(Type $type): ?ElementSingle
+    protected function isArrayNestedElement(Type $type): ?Element
     {
-        if ($type instanceof ComplexType && !$type->getParent() && !$type->getAttributes() && count($type->getElements()) === 1) {
-            $elements = $type->getElements();
+        if (
+            $type instanceof ComplexType
+            && !$type->getParent()
+            && !$type->getAttributes()
+            && count($elements = $type->getElements()) === 1
+        ) {
             return $this->isArrayElement(reset($elements));
         }
 
@@ -137,7 +114,7 @@ abstract class AbstractConverter
      * @param mixed $element
      * @return \GoetasWebservices\XML\XSDReader\Schema\Element\ElementSingle|null
      */
-    protected function isArrayElement($element): ?ElementSingle
+    protected function isArrayElement($element): ?Element
     {
         if ($element instanceof ElementSingle && ($element->getMax() > 1 || $element->getMax() === -1)) {
             return $element;
