@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema
+        xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="madmages:xsd2php:pc"
+        xmlns="madmages:xsd2php:pc"
+        elementFormDefault="qualified"
+        attributeFormDefault="qualified"
+>
+    <xs:element name="pc">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="brandable">
+                    <xs:sequence>
+                        <xs:element name="case">
+                            <xs:complexType>
+                                <xs:complexContent>
+                                    <xs:extension base="brandable">
+                                        <xs:sequence>
+                                            <xs:element name="motherboard">
+                                                <xs:complexType>
+                                                    <xs:complexContent>
+                                                        <xs:extension base="brandable">
+                                                            <xs:sequence>
+                                                                <xs:element name="ram" minOccurs="0" type="xs:string"/>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="length" type="xs:decimal"/>
+                                                            <xs:attribute name="width" type="xs:decimal"/>
+                                                            <xs:attribute name="height" type="xs:decimal"/>
+                                                        </xs:extension>
+                                                    </xs:complexContent>
+                                                </xs:complexType>
+                                            </xs:element>
+                                        </xs:sequence>
+                                        <xs:attribute name="length" use="required" type="xs:decimal"/>
+                                        <xs:attribute name="width" use="required" type="xs:decimal"/>
+                                        <xs:attribute name="height" type="xs:decimal"/>
+                                    </xs:extension>
+                                </xs:complexContent>
+
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                    <xs:attribute name="age" use="required" type="xs:int"/>
+                    <xs:attribute name="date_bought" use="required" type="xs:dateTime"/>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="brandable" abstract="true">
+        <xs:sequence>
+            <xs:element name="brand" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

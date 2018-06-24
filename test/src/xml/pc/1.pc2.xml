@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tns:pc2 xmlns:tns="madmages:xsd2php:pc2" date_bought="2005-08-15T15:52:01+00:00" age="5">
+    <brand>MegaPCBrand2</brand>
+    <case height="30" length="50" width="20">
+        <brand>SomeCaseBrand2</brand>
+        <motherboard formFactor="miniATX">
+            <brand>SomeMotherboardBrand2</brand>
+            <ram frequency="1000"/>
+            <ram frequency="2000"/>
+            <ram frequency="3000"/>
+            <ram frequency="4000"/>
+            <ram frequency="5000"/>
+            <ram frequency="6000"/>
+            <ram frequency="7000"/>
+            <ram frequency="8000"/>
+        </motherboard>
+    </case>
+</tns:pc2>

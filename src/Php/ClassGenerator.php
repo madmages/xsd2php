@@ -6,7 +6,7 @@ use Doctrine\Common\Inflector\Inflector;
 use Madmages\Xsd\XsdToPhp\Config;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClassOf;
-use Madmages\Xsd\XsdToPhp\Php\Structure\PHPProperty;
+use Madmages\Xsd\XsdToPhp\Php\Structure\PHPArg;
 use Zend\Code\Generator\ClassGenerator as ZendClass;
 use Zend\Code\Generator\DocBlock\Tag\ParamTag;
 use Zend\Code\Generator\DocBlock\Tag\PropertyTag;
@@ -73,11 +73,11 @@ class ClassGenerator
 
     /**
      * @param ZendClass $zend_class
-     * @param PHPProperty $property
+     * @param PHPArg $property
      * @throws \RuntimeException
      * @throws \Zend\Code\Generator\Exception\InvalidArgumentException
      */
-    private function handleProperty(ZendClass $zend_class, PHPProperty $property): void
+    private function handleProperty(ZendClass $zend_class, PHPArg $property): void
     {
         $property_generator = new PropertyGenerator($property->getName());
         $property_generator->setVisibility(PropertyGenerator::VISIBILITY_PRIVATE);
@@ -125,10 +125,10 @@ class ClassGenerator
 
     /**
      * @param ZendClass $generator
-     * @param PHPProperty $property
+     * @param PHPArg $property
      * @throws \Zend\Code\Generator\Exception\InvalidArgumentException
      */
-    private function handleValueMethod(ZendClass $generator, PHPProperty $property): void
+    private function handleValueMethod(ZendClass $generator, PHPArg $property): void
     {
         $type = $property->getType();
 
@@ -218,12 +218,12 @@ class ClassGenerator
 
     /**
      * @param ZendClass $zend_class
-     * @param PHPProperty $property
+     * @param PHPArg $property
      * @param PHPClass $class
      * @throws \Zend\Code\Generator\Exception\InvalidArgumentException
      * @throws \RuntimeException
      */
-    private function handleMethod(ZendClass $zend_class, PHPProperty $property, PHPClass $class): void
+    private function handleMethod(ZendClass $zend_class, PHPArg $property, PHPClass $class): void
     {
         $methods = [];
         if ($property->getType() instanceof PHPClassOf) {
@@ -243,13 +243,13 @@ class ClassGenerator
     }
 
     /**
-     * @param PHPProperty $property
+     * @param PHPArg $property
      * @param PHPClass $class
      * @return MethodGenerator[]
      * @throws \Zend\Code\Generator\Exception\InvalidArgumentException
      * @throws \RuntimeException
      */
-    private function handleAddToArrayMethod(PHPProperty $property, PHPClass $class): array
+    private function handleAddToArrayMethod(PHPArg $property, PHPClass $class): array
     {
         /** @var PHPClassOf $property_type */
         $property_type = $property->getType();
@@ -287,12 +287,12 @@ class ClassGenerator
     }
 
     /**
-     * @param PHPProperty $property
+     * @param PHPArg $property
      * @return MethodGenerator[]
      * @throws \RuntimeException
      * @throws \Zend\Code\Generator\Exception\InvalidArgumentException
      */
-    private function handleGetterMethod(PHPProperty $property): array
+    private function handleGetterMethod(PHPArg $property): array
     {
         $methods = [];
         $property_type = $property->getType();
@@ -418,13 +418,13 @@ class ClassGenerator
     }
 
     /**
-     * @param PHPProperty $property
+     * @param PHPArg $property
      * @param PHPClass $class
      * @return MethodGenerator[]
      * @throws \Zend\Code\Generator\Exception\InvalidArgumentException
      * @throws \RuntimeException
      */
-    private function handleSetterMethod(PHPProperty $property, PHPClass $class): array
+    private function handleSetterMethod(PHPArg $property, PHPClass $class): array
     {
         $doc_parameter_type = null;
         $parameter_type = null;

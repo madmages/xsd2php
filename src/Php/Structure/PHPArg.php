@@ -25,6 +25,10 @@ class PHPArg
         $this->type = $type;
     }
 
+    /**
+     * @param bool $is_nullable
+     * @return static
+     */
     public function setIsNullable(bool $is_nullable): self
     {
         $this->is_nullable = $is_nullable;
@@ -41,6 +45,10 @@ class PHPArg
         return $this->doc;
     }
 
+    /**
+     * @param null|string $doc
+     * @return static
+     */
     public function setDoc(?string $doc): self
     {
         $this->doc = $doc;
@@ -55,17 +63,26 @@ class PHPArg
         return $this->type;
     }
 
+    /**
+     * @param PHPClass $type
+     * @return static
+     */
     public function setType(PHPClass $type): self
     {
         $this->type = $type;
         return $this;
     }
 
+
     public function getName(): string
     {
         return $this->name;
     }
 
+    /**
+     * @param string $name
+     * @return static
+     */
     public function setName(string $name): self
     {
         $this->name = $name;
@@ -77,7 +94,11 @@ class PHPArg
         return $this->default;
     }
 
-    public function setDefault(array $default)
+    /**
+     * @param array $default
+     * @return static
+     */
+    public function setDefault(array $default):self
     {
         $this->default = $default;
         return $this;

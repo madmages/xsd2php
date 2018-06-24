@@ -65,7 +65,7 @@ class Psr4 implements PathGenerator
                     throw new \RuntimeException(sprintf('Can`t create the folder `%s`', $directory_path));
                 }
 
-                $file_name = trim(strtr(substr($current_yaml_ns, strlen($directory_path)), "\\/", '..'), '.');
+                $file_name = trim(strtr(substr($current_yaml_ns, strlen($namespace_php)), "\\/", '..'), '.');
 
                 return "{$directory_path}/{$file_name}.yml";
             }
@@ -86,7 +86,7 @@ class Psr4 implements PathGenerator
 
             if ($position === 0) {
                 $dir_postfix = str_replace(PHPClass::NS_SLASH, '/', substr($zend_class->getNamespaceName(), strlen($php_namespace)));
-                $destination = rtrim($destination, '/') . '/' . $dir_postfix;
+                $destination = rtrim($destination, '/') . $dir_postfix;
 
                 if (!is_dir($destination) && !mkdir($destination, 0777, true) && !is_dir($destination)) {
                     $error = error_get_last();

@@ -56,7 +56,7 @@ abstract class AbstractConverter
     }
 
     /**
-     * @param \GoetasWebservices\XML\XSDReader\Schema\Item|Attribute|Type $type
+     * @param Attribute|Type $type
      * @param Schema|null $schema
      * @return mixed
      */

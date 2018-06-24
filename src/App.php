@@ -19,6 +19,8 @@ final class App extends Container
      */
     public static function run(array $xsd_files, Config $config)
     {
+        self::setInstance();
+
         $i = self::getInstance();
         $i->instance(Config::class, $config);
 

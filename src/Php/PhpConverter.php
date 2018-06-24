@@ -20,15 +20,16 @@ use GoetasWebservices\XML\XSDReader\Schema\Type\SimpleType;
 use GoetasWebservices\XML\XSDReader\Schema\Type\Type;
 use Madmages\Xsd\XsdToPhp\AbstractConverter;
 use Madmages\Xsd\XsdToPhp\Config;
+use Madmages\Xsd\XsdToPhp\Exception\NullPointer;
 use Madmages\Xsd\XsdToPhp\NamingStrategy;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPArg;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClassOf;
-use Madmages\Xsd\XsdToPhp\Php\Structure\PHPProperty;
+use Madmages\Xsd\XsdToPhp\SchemaConverter;
 use Madmages\Xsd\XsdToPhp\XMLSchema;
 use RuntimeException;
 
-class PhpConverter extends AbstractConverter
+class PhpConverter extends AbstractConverter implements SchemaConverter
 {
     /** @var ClassData[] */
     private $class_datas;
@@ -62,23 +63,24 @@ class PhpConverter extends AbstractConverter
     public function convert(array $schemas): array
     {
         $visited = [];
-        $this->class_datas = [];
+        $class_datas = [];
         foreach ($schemas as $schema) {
-            $this->navigate($schema, $visited);
+            $class_datas = $this->navigate($schema, $visited);
         }
 
-        return $this->getTypes();
+        return $this->getTypes($class_datas);
     }
 
     /**
      * @param Schema $schema
      * @param bool[] $visited
+     * @return ClassData[]|null
      * @throws Exception
      */
-    private function navigate(Schema $schema, array &$visited): void
+    private function navigate(Schema $schema, array &$visited): ?array
     {
         if (isset($visited[$schema_id = spl_object_hash($schema)])) {
-            return;
+            return null;
         }
         $visited[$schema_id] = true;
 
@@ -95,24 +97,26 @@ class PhpConverter extends AbstractConverter
                 $this->navigate($child_schema, $visited);
             }
         }
+
+        return $this->class_datas;
     }
 
     /**
      *
-     * @param Type $type
+     * @param Type $xsd_type
      * @param bool $force
      * @param bool $skip
      * @return PHPClass
      * @throws Exception
      */
-    private function visitType(Type $type, bool $force = false, bool $skip = false): PHPClass
+    private function visitType(Type $xsd_type, bool $force = false, bool $skip = false): PHPClass
     {
-        if (!$class_data = $this->getClassData($type)) {
-            $class_data = $this->createClassData($type);
+        if (!$class_data = $this->getClassData($xsd_type)) {
+            $class_data = $this->createClassData($xsd_type);
             $class = $class_data->getClass();
 
-            $skip = $skip || $this->isInBaseSchema($type->getSchema());
-            if ($alias = $this->getTypeAlias($type)) {
+            $skip = $skip || $this->isInBaseSchema($xsd_type->getSchema());
+            if ($alias = $this->getTypeAlias($xsd_type)) {
                 $class->setName($alias);
 
                 $class_data->skip();
@@ -120,30 +124,30 @@ class PhpConverter extends AbstractConverter
                 return $class;
             }
 
-            [$name, $ns] = $this->findPHPName($type);
+            [$name, $namespace_php] = $this->findPHPName($xsd_type);
             $class
                 ->setName($name)
-                ->setNamespace($ns)
-                ->setDoc($type->getDoc() . PHP_EOL . 'XSD Type: ' . ($type->getName() ?? 'anonymous'));
+                ->setNamespace($namespace_php)
+                ->setDoc($xsd_type->getDoc() . PHP_EOL . 'XSD Type: ' . ($xsd_type->getName() ?? 'anonymous'));
 
-            $this->visitTypeBase($class, $type);
+            $this->visitTypeBase($class, $xsd_type);
 
-            if ($type instanceof SimpleType) {
+            if ($xsd_type instanceof SimpleType) {
                 $class_data->skip();
 
                 return $class;
             }
 
-            if (!$force && ($this->isArrayType($type) || $this->isArrayNestedElement($type))) {
+            if (!$force && ($this->isArrayType($xsd_type) || $this->isArrayNestedElement($xsd_type))) {
                 $class_data->skip();
 
                 return $class;
             }
 
-            $class_data->skip($skip || (bool)$this->getTypeAlias($type));
+            $class_data->skip($skip || (bool)$this->getTypeAlias($xsd_type));
         } else {
-            if ($force && !($type instanceof SimpleType) && !$this->getTypeAlias($type)) {
-                $class_data->skip($this->isInBaseSchema($type->getSchema()));
+            if ($force && !($xsd_type instanceof SimpleType) && !$this->getTypeAlias($xsd_type)) {
+                $class_data->skip($this->isInBaseSchema($xsd_type->getSchema()));
             }
         }
 
@@ -251,11 +255,12 @@ class PhpConverter extends AbstractConverter
         if ($alias = $this->getTypeAlias($type)) {
             $type_class = PHPClass::createFromFQCN($alias);
             if ($type_class === null) {
-                throw new \RuntimeException('null occurs');
+                throw new NullPointer;
             }
 
-            $value_property = new PHPProperty('__value');
-            $value_property->setType($type_class);
+            $value_property = (new PHPArg('__value'))
+                ->setType($type_class);
+
             $type_class->addProperty($value_property);
             $class->setExtends($type_class);
         } else {
@@ -338,13 +343,13 @@ class PhpConverter extends AbstractConverter
     /**
      * @param PHPClass $class
      * @param AttributeSingle|AttributeDef $attribute
-     * @return PHPProperty
+     * @return PHPArg
      * @throws Exception
      */
-    private function visitAttribute(PHPClass $class, $attribute): PHPProperty
+    private function visitAttribute(PHPClass $class, $attribute): PHPArg
     {
-        $property = new PHPProperty();
-        $property->setName($this->getNamingStrategy()->getPropertyName($attribute));
+        $property = new PHPArg();
+        $property->setName($this->getNamingStrategy()->getPropertyName($attribute->getName()));
         //todo switch to constant
         $is_nullable = method_exists($attribute, 'getUse') ? $attribute->getUse() === 'optional' : true;
         $property->setIsNullable($is_nullable);
@@ -352,8 +357,7 @@ class PhpConverter extends AbstractConverter
         /** @var Attribute $attribute */
         $attribute_type = $attribute->getType();
         if ($attribute_type === null) {
-            //todo to custom exception
-            throw new \RuntimeException('null occur');
+            throw new NullPointer;
         }
 
         if ($item_of_array = $this->isArrayType($attribute_type)) {
@@ -388,7 +392,7 @@ class PhpConverter extends AbstractConverter
 
         $node_type = $node->getType();
         if ($node_type === null) {
-            throw new \RuntimeException('null occur');
+            throw new NullPointer;
         }
 
         if ($valueProp = $this->typeHasValue($node_type, $class, '')) {
@@ -423,12 +427,12 @@ class PhpConverter extends AbstractConverter
 
             $class
                 ->setDoc($element->getDoc())
-                ->setName($this->getNamingStrategy()->getItemName($element))
+                ->setName($this->getNamingStrategy()->getItemName($element->getName()))
                 ->setNamespace($this->namespaces[$target_ns]);
 
 
             if (($element_type = $element->getType()) === null) {
-                throw new \RuntimeException('null occur');
+                throw new NullPointer;
             }
 
             if (!$element_type->getName()) {
@@ -530,14 +534,14 @@ class PhpConverter extends AbstractConverter
      * @param Schema $schema
      * @param ElementSingle $element
      * @param bool $arrayize
-     * @return \Madmages\Xsd\XsdToPhp\Php\Structure\PHPProperty
+     * @return \Madmages\Xsd\XsdToPhp\Php\Structure\PHPArg
      * @throws Exception
      */
-    private function visitElement(PHPClass $class, Schema $schema, ElementSingle $element, $arrayize = true): PHPProperty
+    private function visitElement(PHPClass $class, Schema $schema, ElementSingle $element, $arrayize = true): PHPArg
     {
-        $property = new PHPProperty();
+        $property = new PHPArg();
         $property->setIsNullable($element->getMin() === 0);
-        $property->setName($this->getNamingStrategy()->getPropertyName($element));
+        $property->setName($this->getNamingStrategy()->getPropertyName($element->getName()));
         /** @var Element $element */
         $property->setDoc($element->getDoc());
 
@@ -545,7 +549,7 @@ class PhpConverter extends AbstractConverter
 
         if ($arrayize) {
             if ($element_type === null) {
-                throw new \RuntimeException('null occur');
+                throw new NullPointer;
             }
 
             /** @var Type $item_of_array */
@@ -583,11 +587,12 @@ class PhpConverter extends AbstractConverter
                 }
                 $elementProp = $this->visitElement($classType, $schema, $item_of_array, false);
                 $property->setType(new PHPClassOf($elementProp));
+
                 return $property;
             }
 
             if ($this->isArrayElement($element)) {
-                $arg = new PHPArg($this->getNamingStrategy()->getPropertyName($element));
+                $arg = new PHPArg($this->getNamingStrategy()->getPropertyName($element->getName()));
 
                 $arg->setType($this->findPHPClass($class, $element));
                 $arg->setDefault([]);
@@ -601,20 +606,17 @@ class PhpConverter extends AbstractConverter
     }
 
     /**
+     * @param ClassData[] $class_datas
      * @return PHPClass[]
-     * @throws \RuntimeException
+     * @throws NullPointer
      */
-    private function getTypes(): array
+    private function getTypes(array $class_datas): array
     {
-        uasort($this->class_datas, function (ClassData $a, ClassData $b) {
-            return strcmp($a->getClass()->getFullName(), $b->getClass()->getFullName());
-        });
-
         $result = [];
-        foreach ($this->class_datas as $class_data) {
+        foreach ($class_datas as $class_data) {
             if (!$class_data->isSkip()) {
                 if (!$class = $class_data->getClass()) {
-                    throw new \RuntimeException('null occur');
+                    throw new NullPointer;
                 }
 
                 $result[$class->getFullName()] = $class;

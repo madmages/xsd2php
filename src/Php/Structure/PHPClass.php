@@ -20,7 +20,7 @@ class PHPClass
     /** @var array[][] */
     protected $checks = [];
 
-    /** @var PHPProperty[] */
+    /** @var PHPArg[] */
     protected $properties = [];
 
     /** @var bool */
@@ -37,27 +37,23 @@ class PHPClass
 
     public static function createFromFQCN(string $class_name): ?self
     {
-        if (($pos = strrpos($class_name, self::NS_SLASH)) !== false) {
-            return new self(substr($class_name, $pos + 1), substr($class_name, 0, $pos));
+        if (($position = strrpos($class_name, self::NS_SLASH)) !== false) {
+            return new self(substr($class_name, $position + 1), substr($class_name, 0, $position));
         }
 
         return new self($class_name);
     }
 
     /**
-     * @param bool $only_parent
-     * @return PHPProperty|null
+     * @return PHPArg|null
      */
-    public function getSimpleType(bool $only_parent = false): ?PHPProperty
+    public function getSimpleType(): ?PHPArg
     {
-        if ($only_parent) {
-            if (($extends = $this->getExtends()) && $extends->hasProperty('__value')) {
-                return $extends->getProperty('__value');
-            }
-        } else {
-            if ($this->hasPropertyInHierarchy('__value') && count($this->getPropertiesInHierarchy()) === 1) {
-                return $this->getPropertyInHierarchy('__value');
-            }
+        if (
+            $this->hasPropertyInHierarchy('__value')
+            && count($this->getPropertiesInHierarchy()) === 1
+        ) {
+            return $this->getPropertyInHierarchy('__value');
         }
 
         return null;
@@ -85,9 +81,9 @@ class PHPClass
 
     /**
      * @param string $name
-     * @return PHPProperty
+     * @return PHPArg
      */
-    public function getProperty(string $name): PHPProperty
+    public function getProperty(string $name): PHPArg
     {
         return $this->properties[$name];
     }
@@ -128,14 +124,14 @@ class PHPClass
     }
 
     /**
-     * @return PHPProperty[]
+     * @return PHPArg[]
      */
     public function getProperties(): array
     {
         return $this->properties;
     }
 
-    public function getPropertyInHierarchy(string $name): ?PHPProperty
+    public function getPropertyInHierarchy(string $name): ?PHPArg
     {
         if ($this->hasProperty($name)) {
             return $this->getProperty($name);
@@ -237,7 +233,7 @@ class PHPClass
         return $this;
     }
 
-    public function addProperty(PHPProperty $property): self
+    public function addProperty(PHPArg $property): self
     {
         $this->properties[$property->getName()] = $property;
         return $this;

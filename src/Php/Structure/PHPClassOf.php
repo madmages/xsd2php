@@ -17,14 +17,6 @@ class PHPClassOf extends PHPClass
     }
 
     /**
-     * @return string
-     */
-    public function __toString()
-    {
-        return 'array of ' . $this->arg;
-    }
-
-    /**
      * @return PHPArg
      */
     public function getArg(): PHPArg

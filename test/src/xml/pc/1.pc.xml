@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pc xmlns:pc="madmages:xsd2php:pc" xmlns="madmages:xsd2php:pc" pc:date_bought="2005-08-15T15:52:01+00:00" pc:age="5">
+    <brand>MegaPCBrand</brand>
+    <case pc:length="150" pc:width="150" pc:height="150.54445">
+        <brand>SomeCaseBrand</brand>
+        <motherboard>
+            <brand>SomeMotherboardBrand</brand>
+        </motherboard>
+    </case>
+</pc>

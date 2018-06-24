@@ -16,11 +16,6 @@ class Types
     public const VOID = 'void';
     public const STATIC = 'static';
 
-    public static function oneOf(): string
-    {
-        return implode('|', func_get_args());
-    }
-
     public static function typedArray(string $type): string
     {
         return "{$type}[]";

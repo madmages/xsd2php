@@ -2,22 +2,17 @@
 
 namespace Madmages\Xsd\XsdToPhp;
 
-use GoetasWebservices\XML\XSDReader\Schema\Attribute\AttributeItem;
-use GoetasWebservices\XML\XSDReader\Schema\Element\ElementItem;
-use GoetasWebservices\XML\XSDReader\Schema\Item;
-use GoetasWebservices\XML\XSDReader\Schema\Type\Type;
-
 interface NamingStrategy
 {
-    public function getTypeName(Type $type): string;
+    public function getTypeName(string $type): string;
 
-    public function getAnonymousTypeName(Type $type, string $parent_name): string;
+    public function getAnonymousTypeName(string $type, string $parent_name): string;
 
-    public function getItemName(Item $item): string;
+    public function getItemName(string $item): string;
 
-    /**
-     * @param ElementItem|AttributeItem $item $item
-     * @return string
-     */
-    public function getPropertyName($item): string;
+    public function getPropertyName(string $item): string;
+
+    public function getSetterMethod(string $item): string;
+
+    public function getGetterMethod(string $item): string;
 }

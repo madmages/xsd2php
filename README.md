@@ -67,8 +67,8 @@ Here is an example on how to configure JMS serializer to handle custom types
 use JMS\Serializer\SerializerBuilder;
 use JMS\Serializer\Handler\HandlerRegistryInterface;
 
-use Madmages\Xsd\XsdToPhpRuntime\Jms\Handler\BaseTypesHandler;
-use Madmages\Xsd\XsdToPhpRuntime\Jms\Handler\XmlSchemaDateHandler;
+use GoetasWebservices\Xsd\XsdToPhpRuntime\Jms\Handler\BaseTypesHandler;
+use GoetasWebservices\Xsd\XsdToPhpRuntime\Jms\Handler\XmlSchemaDateHandler;
 
 $serializerBuilder = SerializerBuilder::create();
 $serializerBuilder->addMetadataDir('metadata dir', 'TestNs');

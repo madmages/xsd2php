@@ -90,4 +90,19 @@ abstract class AbstractNamingStrategy implements NamingStrategy
     {
         return Inflector::classify(str_replace('.', ' ', $name ?? ''));
     }
+
+    public function getSetterMethod(string $item): string
+    {
+        return 'set' . $this->classifyMethod($item);
+    }
+
+    public function getGetterMethod(string $item): string
+    {
+        return 'get' . $this->classifyMethod($item);
+    }
+
+    protected function classifyMethod(string $item): string
+    {
+        return Inflector::classify($item);
+    }
 }
