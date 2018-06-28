@@ -44,16 +44,16 @@ abstract class AbstractConverter
         }
     }
 
+    public function addAliasMap(string $xsd_namespace, string $xsd_type, callable $handler): void
+    {
+        $this->type_aliases[$xsd_namespace][$xsd_type] = $handler;
+    }
+
     /**
      * @param Schema[] $schemas
      * @return mixed
      */
     abstract public function convert(array $schemas);
-
-    public function addAliasMap(string $xsd_namespace, string $xsd_type, callable $handler): void
-    {
-        $this->type_aliases[$xsd_namespace][$xsd_type] = $handler;
-    }
 
     /**
      * @param Attribute|Type $type
@@ -85,7 +85,7 @@ abstract class AbstractConverter
 
     /**
      * @param Type $type
-     * @return \GoetasWebservices\XML\XSDReader\Schema\Type\Type|null
+     * @return Type|null
      */
     protected function isArrayType(Type $type): ?Type
     {
@@ -112,7 +112,7 @@ abstract class AbstractConverter
 
     /**
      * @param mixed $element
-     * @return \GoetasWebservices\XML\XSDReader\Schema\Element\ElementSingle|null
+     * @return ElementSingle|null
      */
     protected function isArrayElement($element): ?Element
     {

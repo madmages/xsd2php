@@ -2,7 +2,7 @@
 
 namespace Madmages\Xsd\XsdToPhp\Php\Structure;
 
-class PHPArg
+class PHPProperty
 {
     /** @var string|null */
     protected $doc;
@@ -19,10 +19,9 @@ class PHPArg
     /** @var array|null */
     protected $default;
 
-    public function __construct(string $name = null, PHPClass $type = null)
+    public function getIsNullable(): bool
     {
-        $this->name = $name;
-        $this->type = $type;
+        return $this->is_nullable;
     }
 
     /**
@@ -33,11 +32,6 @@ class PHPArg
     {
         $this->is_nullable = $is_nullable;
         return $this;
-    }
-
-    public function getIsNullable(): bool
-    {
-        return $this->is_nullable;
     }
 
     public function getDoc(): ?string
@@ -98,7 +92,7 @@ class PHPArg
      * @param array $default
      * @return static
      */
-    public function setDefault(array $default):self
+    public function setDefault(array $default): self
     {
         $this->default = $default;
         return $this;

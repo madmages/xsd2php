@@ -4,22 +4,22 @@ namespace Madmages\Xsd\XsdToPhp\Php\Structure;
 
 class PHPClassOf extends PHPClass
 {
-    /**  @var PHPArg */
+    /**  @var PHPProperty */
     protected $arg;
 
     /**
-     * @param PHPArg $arg
+     * @param PHPProperty $arg
      */
-    public function __construct(PHPArg $arg)
+    public function __construct(PHPProperty $arg)
     {
         $this->arg = $arg;
         $this->name = 'array';
     }
 
     /**
-     * @return PHPArg
+     * @return PHPProperty
      */
-    public function getArg(): PHPArg
+    public function getArg(): PHPProperty
     {
         return $this->arg;
     }

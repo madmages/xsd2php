@@ -176,3 +176,7 @@ An XSD for instance with a type named `User`, a type named `UserType`, a root el
 * If you don't have naming conflicts and you want to have short and descriptive class names, use the `short` option.
 * If you have naming conflicts use the `long` option.
 * If you want to be safe, use the `long` option.
+
+Known issues
+-------------------
+* Attribute ref use="required" returns null

@@ -2,12 +2,12 @@
 
 <xs:schema
         xmlns:xs="http://www.w3.org/2001/XMLSchema"
-        targetNamespace="madmages:xsd2php:pc"
-        xmlns="madmages:xsd2php:pc"
+        targetNamespace="madmages:xsd2php:pc1"
+        xmlns="madmages:xsd2php:pc1"
         elementFormDefault="qualified"
         attributeFormDefault="qualified"
 >
-    <xs:element name="pc">
+    <xs:element name="pc1">
         <xs:complexType>
             <xs:complexContent>
                 <xs:extension base="brandable">

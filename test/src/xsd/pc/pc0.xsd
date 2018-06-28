@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema targetNamespace="madmages:xsd2php:pc0" elementFormDefault="qualified"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="madmages:xsd2php:pc0"
+>
+    <xs:element name="pc0" type="someType"/>
+
+    <xs:simpleType name="someType">
+        <xs:restriction base="someAnotherType">
+            <xs:minLength value="3"/>
+            <xs:maxLength value="200"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="someAnotherType">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="3"/>
+            <xs:maxLength value="200"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

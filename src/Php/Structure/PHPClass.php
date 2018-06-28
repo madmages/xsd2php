@@ -7,6 +7,7 @@ use Madmages\Xsd\XsdToPhp\Php\Types;
 class PHPClass
 {
     public const NS_SLASH = '\\';
+    public const VALUE_CLASS = '__value';
 
     /** @var string|null */
     protected $name;
@@ -20,7 +21,7 @@ class PHPClass
     /** @var array[][] */
     protected $checks = [];
 
-    /** @var PHPArg[] */
+    /** @var PHPProperty[] */
     protected $properties = [];
 
     /** @var bool */
@@ -29,63 +30,34 @@ class PHPClass
     /** @var self|null */
     protected $extends;
 
-    public function __construct(string $name = null, string $namespace = null)
+    public static function createFromFQCN(string $type_name): ?self
     {
-        $this->name = $name;
-        $this->namespace = $namespace;
-    }
-
-    public static function createFromFQCN(string $class_name): ?self
-    {
-        if (($position = strrpos($class_name, self::NS_SLASH)) !== false) {
-            return new self(substr($class_name, $position + 1), substr($class_name, 0, $position));
+        $instance = new self();
+        if (($position = strrpos($type_name, self::NS_SLASH)) !== false) {
+            $instance
+                ->setName(substr($type_name, $position + 1))
+                ->setNamespace(substr($type_name, 0, $position));
+        } else {
+            $instance->setName($type_name);
         }
 
-        return new self($class_name);
+
+        return $instance;
     }
 
     /**
-     * @return PHPArg|null
+     * @return PHPProperty|null
      */
-    public function getSimpleType(): ?PHPArg
+    public function getSimpleType(): ?PHPProperty
     {
         if (
-            $this->hasPropertyInHierarchy('__value')
+            $this->hasPropertyInHierarchy(PHPClass::VALUE_CLASS)
             && count($this->getPropertiesInHierarchy()) === 1
         ) {
-            return $this->getPropertyInHierarchy('__value');
+            return $this->getPropertyInHierarchy(PHPClass::VALUE_CLASS);
         }
 
         return null;
-    }
-
-    public function getExtends(): ?self
-    {
-        return $this->extends;
-    }
-
-    public function setExtends(self $extends): self
-    {
-        $this->extends = $extends;
-        return $this;
-    }
-
-    /**
-     * @param string $name
-     * @return bool
-     */
-    public function hasProperty(string $name): bool
-    {
-        return isset($this->properties[$name]);
-    }
-
-    /**
-     * @param string $name
-     * @return PHPArg
-     */
-    public function getProperty(string $name): PHPArg
-    {
-        return $this->properties[$name];
     }
 
     /**
@@ -110,6 +82,26 @@ class PHPClass
     }
 
     /**
+     * @param string $name
+     * @return bool
+     */
+    public function hasProperty(string $name): bool
+    {
+        return isset($this->properties[$name]);
+    }
+
+    public function getExtends(): ?self
+    {
+        return $this->extends;
+    }
+
+    public function setExtends(self $extends): self
+    {
+        $this->extends = $extends;
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function getPropertiesInHierarchy(): array
@@ -124,14 +116,14 @@ class PHPClass
     }
 
     /**
-     * @return PHPArg[]
+     * @return PHPProperty[]
      */
     public function getProperties(): array
     {
         return $this->properties;
     }
 
-    public function getPropertyInHierarchy(string $name): ?PHPArg
+    public function getPropertyInHierarchy(string $name): ?PHPProperty
     {
         if ($this->hasProperty($name)) {
             return $this->getProperty($name);
@@ -146,6 +138,15 @@ class PHPClass
         }
 
         return null;
+    }
+
+    /**
+     * @param string $name
+     * @return PHPProperty
+     */
+    public function getProperty(string $name): PHPProperty
+    {
+        return $this->properties[$name];
     }
 
     public function getPhpType(bool $with_mixed = true, bool $is_nullable = false): ?string
@@ -233,7 +234,7 @@ class PHPClass
         return $this;
     }
 
-    public function addProperty(PHPArg $property): self
+    public function addProperty(PHPProperty $property): self
     {
         $this->properties[$property->getName()] = $property;
         return $this;

@@ -54,6 +54,13 @@ class Config
         return $this->addHandler(self::HANDLERS_CLASS, $handler);
     }
 
+    private function addHandler(string $handler_type, callable $handler)
+    {
+        $this->configs['handlers'][$handler_type][] = $handler;
+
+        return $this;
+    }
+
     public function handleGeneratedMethod(callable $handler): self
     {
         return $this->addHandler(self::HANDLERS_METHOD, $handler);
@@ -105,13 +112,6 @@ class Config
         }
 
         return $this->configs['aliases'];
-    }
-
-    private function addHandler(string $handler_type, callable $handler)
-    {
-        $this->configs['handlers'][$handler_type][] = $handler;
-
-        return $this;
     }
 
     public function getNamingStrategy(): string

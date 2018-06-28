@@ -86,14 +86,14 @@ abstract class AbstractNamingStrategy implements NamingStrategy
         'xor',
     ];
 
-    protected function classify(?string $name): string
-    {
-        return Inflector::classify(str_replace('.', ' ', $name ?? ''));
-    }
-
     public function getSetterMethod(string $item): string
     {
         return 'set' . $this->classifyMethod($item);
+    }
+
+    protected function classifyMethod(string $item): string
+    {
+        return Inflector::classify($item);
     }
 
     public function getGetterMethod(string $item): string
@@ -101,8 +101,8 @@ abstract class AbstractNamingStrategy implements NamingStrategy
         return 'get' . $this->classifyMethod($item);
     }
 
-    protected function classifyMethod(string $item): string
+    protected function classify(?string $name): string
     {
-        return Inflector::classify($item);
+        return Inflector::classify(str_replace('.', ' ', $name ?? ''));
     }
 }

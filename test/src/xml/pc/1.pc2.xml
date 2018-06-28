@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tns:pc2 xmlns:tns="madmages:xsd2php:pc2" date_bought="2005-08-15T15:52:01+00:00" age="5">
+<tns:pc2 xmlns:tns="madmages:xsd2php:pc2" width="5" length="3" date_bought="2005-08-15T15:52:01+00:00"
+         age="5">
     <brand>MegaPCBrand2</brand>
-    <case height="30" length="50" width="20">
+    <case length="50" width="20">
         <brand>SomeCaseBrand2</brand>
         <motherboard formFactor="miniATX">
             <brand>SomeMotherboardBrand2</brand>

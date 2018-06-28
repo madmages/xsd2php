@@ -4,6 +4,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema"
         targetNamespace="madmages:xsd2php:pc2"
         xmlns="madmages:xsd2php:pc2"
+        attributeFormDefault="unqualified"
 >
     <xs:element name="pc2">
         <xs:complexType>
@@ -47,22 +48,21 @@
                                                                     </xs:restriction>
                                                                 </xs:simpleType>
                                                             </xs:attribute>
+                                                            <xs:attribute ref="height"/>
                                                         </xs:extension>
                                                     </xs:complexContent>
                                                 </xs:complexType>
                                             </xs:element>
                                         </xs:sequence>
-                                        <xs:attribute name="length" type="xs:decimal"/>
-                                        <xs:attribute name="width" type="xs:decimal"/>
-                                        <xs:attribute name="height" type="xs:decimal"/>
+                                        <xs:attributeGroup ref="dimensions"/>
                                     </xs:extension>
                                 </xs:complexContent>
-
                             </xs:complexType>
                         </xs:element>
                     </xs:sequence>
                     <xs:attribute name="age" use="required" type="xs:int"/>
                     <xs:attribute name="date_bought" use="required" type="xs:dateTime"/>
+                    <xs:attributeGroup ref="dimensions"/>
                 </xs:extension>
             </xs:complexContent>
         </xs:complexType>
@@ -86,4 +86,12 @@
             <xs:maxLength value="200"/>
         </xs:restriction>
     </xs:simpleType>
+
+    <xs:attributeGroup name="dimensions">
+        <xs:attribute name="length" type="xs:decimal"/>
+        <xs:attribute name="width" type="xs:decimal"/>
+        <xs:attribute ref="height"/>
+    </xs:attributeGroup>
+
+    <xs:attribute name="height" type="xs:decimal"/>
 </xs:schema>

@@ -2,6 +2,7 @@
 
 namespace Madmages\Xsd\XsdToPhp\Jms;
 
+use GoetasWebservices\XML\XSDReader\Schema\Attribute\AbstractAttributeItem;
 use GoetasWebservices\XML\XSDReader\Schema\Attribute\Attribute;
 use GoetasWebservices\XML\XSDReader\Schema\Attribute\AttributeContainer;
 use GoetasWebservices\XML\XSDReader\Schema\Attribute\AttributeItem;
@@ -251,12 +252,12 @@ class YamlConverter extends AbstractConverter
                 ],
             ];
 
-            $data['properties']['__value'] = $property;
+            $data['properties'][PHPClass::VALUE_CLASS] = $property;
         } else {
             $extension = $this->visitType($type, true);
 
-            if (isset($extension['properties']['__value']) && count($extension['properties']) === 1) {
-                $data['properties']['__value'] = $extension['properties']['__value'];
+            if (isset($extension['properties'][PHPClass::VALUE_CLASS]) && count($extension['properties']) === 1) {
+                $data['properties'][PHPClass::VALUE_CLASS] = $extension['properties'][PHPClass::VALUE_CLASS];
             } else {
                 if ($type instanceof SimpleType) {
                     $property = [
@@ -275,7 +276,7 @@ class YamlConverter extends AbstractConverter
                         $property['type'] = key($extension);
                     }
 
-                    $data['properties']['__value'] = $property;
+                    $data['properties'][PHPClass::VALUE_CLASS] = $property;
                 }
             }
         }
@@ -307,8 +308,8 @@ class YamlConverter extends AbstractConverter
             }
 
             $props = reset($parent_class);
-            if (isset($props['properties']['__value']) && count($props['properties']) === 1) {
-                return $props['properties']['__value']['type'];
+            if (isset($props['properties'][PHPClass::VALUE_CLASS]) && count($props['properties']) === 1) {
+                return $props['properties'][PHPClass::VALUE_CLASS]['type'];
             }
         } while (method_exists($type, 'getRestriction') && $type->getRestriction() && $type = $type->getRestriction()->getBase());
 
@@ -364,12 +365,12 @@ class YamlConverter extends AbstractConverter
     /**
      * @param $class
      * @param Schema $schema
-     * @param Attribute $attribute
+     * @param AbstractAttributeItem $attribute
      * @return array
-     * @throws NullPointer
      * @throws ConfigException
+     * @throws NullPointer
      */
-    private function visitAttribute(&$class, Schema $schema, Attribute $attribute): array
+    private function visitAttribute(&$class, Schema $schema, AbstractAttributeItem $attribute): array
     {
         $property = [
             'expose'          => true,
@@ -381,6 +382,10 @@ class YamlConverter extends AbstractConverter
                 'setter' => $this->getNamingStrategy()->getSetterMethod($this->getNamingStrategy()->getPropertyName($attribute->getName()))
             ],
         ];
+
+        if (($attribute instanceof Attribute && $attribute->isQualified()) && !$schema->getElementsQualification()) {
+            echo 1;
+        }
 
         if ($schema->getElementsQualification() && $attribute->getSchema()->getTargetNamespace()) {
             $property['xml_element']['namespace'] = $attribute->getSchema()->getTargetNamespace();

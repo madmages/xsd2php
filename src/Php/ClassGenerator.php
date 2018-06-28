@@ -4,9 +4,9 @@ namespace Madmages\Xsd\XsdToPhp\Php;
 
 use Doctrine\Common\Inflector\Inflector;
 use Madmages\Xsd\XsdToPhp\Config;
+use Madmages\Xsd\XsdToPhp\Php\Structure\PHPProperty;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
 use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClassOf;
-use Madmages\Xsd\XsdToPhp\Php\Structure\PHPArg;
 use Zend\Code\Generator\ClassGenerator as ZendClass;
 use Zend\Code\Generator\DocBlock\Tag\ParamTag;
 use Zend\Code\Generator\DocBlock\Tag\PropertyTag;
@@ -72,12 +72,45 @@ class ClassGenerator
     }
 
     /**
+     * @param string $short_desc
+     * @param string $return_type
+     * @param array $params
+     * @param string|null $description
+     * @return DocBlockGenerator
+     * @throws \Zend\Code\Generator\Exception\InvalidArgumentException
+     */
+    private function createDocBlock(string $short_desc = null, string $return_type = null, array $params = null, string $description = null): DocBlockGenerator
+    {
+        $doc_block = (new DocBlockGenerator())->setWordWrap(false);
+
+        if ($short_desc) {
+            $doc_block->setShortDescription($short_desc);
+        }
+
+        if ($description) {
+            $doc_block->setLongDescription($description);
+        }
+
+        if ($params !== null) {
+            foreach ($params as $variable_name => $type) {
+                $doc_block->setTag(new ParamTag($variable_name, $type));
+            }
+        }
+
+        if ($return_type) {
+            $doc_block->setTag(new ReturnTag($return_type));
+        }
+
+        return $doc_block;
+    }
+
+    /**
      * @param ZendClass $zend_class
-     * @param PHPArg $property
+     * @param PHPProperty $property
      * @throws \RuntimeException
      * @throws \Zend\Code\Generator\Exception\InvalidArgumentException
      */
-    private function handleProperty(ZendClass $zend_class, PHPArg $property): void
+    private function handleProperty(ZendClass $zend_class, PHPProperty $property): void
     {
         $property_generator = new PropertyGenerator($property->getName());
         $property_generator->setVisibility(PropertyGenerator::VISIBILITY_PRIVATE);
@@ -125,10 +158,10 @@ class ClassGenerator
 
     /**
      * @param ZendClass $generator
-     * @param PHPArg $property
+     * @param PHPProperty $property
      * @throws \Zend\Code\Generator\Exception\InvalidArgumentException
      */
-    private function handleValueMethod(ZendClass $generator, PHPArg $property): void
+    private function handleValueMethod(ZendClass $generator, PHPProperty $property): void
     {
         $type = $property->getType();
 
@@ -201,29 +234,29 @@ class ClassGenerator
     {
         // Set properties
         foreach ($class->getProperties() as $property) {
-            if ($property->getName() !== '__value') {
+            if ($property->getName() !== PHPClass::VALUE_CLASS) {
                 $this->handleProperty($zend_class, $property);
             }
         }
 
         // Set methods
         foreach ($class->getProperties() as $property) {
-            if ($property->getName() !== '__value') {
+            if ($property->getName() !== PHPClass::VALUE_CLASS) {
                 $this->handleMethod($zend_class, $property, $class);
             }
         }
 
-        return !($class->hasProperty('__value') && count($class->getProperties()) === 1);
+        return !($class->hasProperty(PHPClass::VALUE_CLASS) && count($class->getProperties()) === 1);
     }
 
     /**
      * @param ZendClass $zend_class
-     * @param PHPArg $property
+     * @param PHPProperty $property
      * @param PHPClass $class
      * @throws \Zend\Code\Generator\Exception\InvalidArgumentException
      * @throws \RuntimeException
      */
-    private function handleMethod(ZendClass $zend_class, PHPArg $property, PHPClass $class): void
+    private function handleMethod(ZendClass $zend_class, PHPProperty $property, PHPClass $class): void
     {
         $methods = [];
         if ($property->getType() instanceof PHPClassOf) {
@@ -243,13 +276,13 @@ class ClassGenerator
     }
 
     /**
-     * @param PHPArg $property
+     * @param PHPProperty $property
      * @param PHPClass $class
      * @return MethodGenerator[]
      * @throws \Zend\Code\Generator\Exception\InvalidArgumentException
      * @throws \RuntimeException
      */
-    private function handleAddToArrayMethod(PHPArg $property, PHPClass $class): array
+    private function handleAddToArrayMethod(PHPProperty $property, PHPClass $class): array
     {
         /** @var PHPClassOf $property_type */
         $property_type = $property->getType();
@@ -287,12 +320,12 @@ class ClassGenerator
     }
 
     /**
-     * @param PHPArg $property
+     * @param PHPProperty $property
      * @return MethodGenerator[]
      * @throws \RuntimeException
      * @throws \Zend\Code\Generator\Exception\InvalidArgumentException
      */
-    private function handleGetterMethod(PHPArg $property): array
+    private function handleGetterMethod(PHPProperty $property): array
     {
         $methods = [];
         $property_type = $property->getType();
@@ -385,46 +418,13 @@ class ClassGenerator
     }
 
     /**
-     * @param string $short_desc
-     * @param string $return_type
-     * @param array $params
-     * @param string|null $description
-     * @return DocBlockGenerator
-     * @throws \Zend\Code\Generator\Exception\InvalidArgumentException
-     */
-    private function createDocBlock(string $short_desc = null, string $return_type = null, array $params = null, string $description = null): DocBlockGenerator
-    {
-        $doc_block = (new DocBlockGenerator())->setWordWrap(false);
-
-        if ($short_desc) {
-            $doc_block->setShortDescription($short_desc);
-        }
-
-        if ($description) {
-            $doc_block->setLongDescription($description);
-        }
-
-        if ($params !== null) {
-            foreach ($params as $variable_name => $type) {
-                $doc_block->setTag(new ParamTag($variable_name, $type));
-            }
-        }
-
-        if ($return_type) {
-            $doc_block->setTag(new ReturnTag($return_type));
-        }
-
-        return $doc_block;
-    }
-
-    /**
-     * @param PHPArg $property
+     * @param PHPProperty $property
      * @param PHPClass $class
      * @return MethodGenerator[]
      * @throws \Zend\Code\Generator\Exception\InvalidArgumentException
      * @throws \RuntimeException
      */
-    private function handleSetterMethod(PHPArg $property, PHPClass $class): array
+    private function handleSetterMethod(PHPProperty $property, PHPClass $class): array
     {
         $doc_parameter_type = null;
         $parameter_type = null;
