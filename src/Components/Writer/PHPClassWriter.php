@@ -2,7 +2,7 @@
 
 namespace Madmages\Xsd\XsdToPhp\Components\Writer;
 
-use Madmages\Xsd\XsdToPhp\PathGenerator;
+use Madmages\Xsd\XsdToPhp\Contract\PathGenerator;
 use Madmages\Xsd\XsdToPhp\Php\ClassGenerator;
 use Zend\Code\Generator\FileGenerator;
 

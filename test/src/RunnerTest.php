@@ -1,12 +1,16 @@
 <?php
 
+use Doctrine\Common\Inflector\Inflector;
 use GoetasWebservices\Xsd\XsdToPhpRuntime\Jms\Handler\BaseTypesHandler;
 use GoetasWebservices\Xsd\XsdToPhpRuntime\Jms\Handler\XmlSchemaDateHandler;
 use JMS\Serializer\Handler\HandlerRegistryInterface;
 use JMS\Serializer\SerializerBuilder;
 use Madmages\Xsd\XsdToPhp\App;
+use Madmages\Xsd\XsdToPhp\Components\Naming\LongNamingStrategy;
 use Madmages\Xsd\XsdToPhp\Config;
-use Madmages\Xsd\XsdToPhp\NamingStrategy;
+use Madmages\Xsd\XsdToPhp\Contract\NamingStrategy;
+use Madmages\Xsd\XsdToPhp\Types;
+use Madmages\Xsd\XsdToPhp\XSD\XMLSchema;
 use PHPUnit\Framework\TestCase;
 
 class RunnerTest extends TestCase
@@ -17,32 +21,42 @@ class RunnerTest extends TestCase
     private const TMP_JMS = self::TMP_DIR . '/jms';
     private const TMP_PHP = self::TMP_DIR . '/php';
     private const NS_PREFIX = "TMP\\PHP";
+    /** @var NamingStrategy */
+    private $strategy;
 
     /**
+     * @param string $xsd_path
+     * @throws Exception
      * @throws \Illuminate\Container\EntryNotFoundException
+     * @throws \Madmages\Xsd\XsdToPhp\Exception\Config
      * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \Psr\Container\NotFoundExceptionInterface
-     * @throws Exception
+     * @dataProvider getXSDs
      */
-    public function testRun()
+    public function testRun(string $xsd_path)
     {
-        $xsds = glob(self::XSD_DIR . '/*/*.xsd');
+        $xsd_path = 'xsd/OTA/OTA_AirBookModifyRQ.xsd';
+        [$xmls_pattern, $file_name] = $this->getXMLSPattern($xsd_path);
+        $config = $this->getConfig($file_name);
+        $container = App::run([$xsd_path], $config);
 
-        foreach ($xsds as $xsd_path) {
-            [$xmls_pattern, $file_name] = $this->getXMLSPattern($xsd_path);
-            $config = $this->getConfig($file_name);
-            App::run([$xsd_path], $config);
+        $this->strategy = $container->get(NamingStrategy::class);
 
-            $xmls = glob($xmls_pattern);
-            foreach ($xmls as $xml) {
-                $xml_string = file_get_contents($xml);
-                $this->isValidXML($xml_string, file_get_contents($xsd_path));
+        $xmls = glob($xmls_pattern);
+        foreach ($xmls as $xml) {
+            $xml_string = file_get_contents($xml);
+            $this->isValidXML($xml_string, file_get_contents($xsd_path));
 
-                $simple_xml = new SimpleXMLElement($xml_string);
-                $deserialized = $this->getSerializer()->deserialize($xml_string, self::NS_PREFIX . '\\' . ucfirst($file_name), 'xml');
+            $simple_xml = new SimpleXMLElement($xml_string);
+            $deserialized = $this->getSerializer()->deserialize($xml_string, self::NS_PREFIX . '\\' . Inflector::classify($file_name) . 'Element', 'xml');
 
-                $this->matchAttributes($simple_xml->attributes('madmages:xsd2php:' . $file_name), $deserialized);
-                $this->matchElements($simple_xml, $deserialized);
+            $namespaces = $simple_xml->getDocNamespaces();
+            foreach ($namespaces as $namespace) {
+                if ('http://www.w3.org/2001/XMLSchema-instance' === $namespace) {
+                    continue;
+                }
+                $this->matchAttributes($simple_xml->attributes($namespace), $deserialized);
+                $this->matchElements($simple_xml, $deserialized, $namespaces);
             }
         }
     }
@@ -60,6 +74,10 @@ class RunnerTest extends TestCase
     {
         if ($item instanceof DateTime) {
             return DateTime::class;
+        }
+
+        if ($item instanceof DateInterval) {
+            return DateInterval::class;
         }
 
         if (is_numeric($item)) {
@@ -104,19 +122,34 @@ class RunnerTest extends TestCase
         array_pop($file_name);
 
         $xml_part = str_replace('xsd', 'xml', $path_parts[$last_part_key]);
-        $path_parts[$last_part_key] = "*.{$xml_part}";
+        $xml_parts = explode('.', $xml_part);
+        $xml_parts[0] = "{$xml_parts[0]}*";
+        $path_parts[$last_part_key] = implode('.', $xml_parts);
 
         return [implode('/', $path_parts), implode('', $file_name)];
     }
 
+    /**
+     * @param string $ns_part
+     * @return Config
+     * @throws \Madmages\Xsd\XsdToPhp\Exception\Config
+     */
     private function getConfig(string $ns_part): Config
     {
-        return (new Config())->addNamespace(
-            'madmages:xsd2php:' . $ns_part,
-            self::NS_PREFIX,
-            self::TMP_PHP,
-            self::TMP_JMS
-        );
+        return (new Config())
+            ->addNamespace(
+                'http://www.opentravel.org/OTA/2003/05',
+                self::NS_PREFIX,
+                self::TMP_PHP,
+                self::TMP_JMS
+            )
+            ->setNamingStrategy(LongNamingStrategy::class)
+            ->setValidators()
+            ->addAliases('http://www.opentravel.org/OTA/2003/05', [
+                XMLSchema::TYPE_ANYTYPE       => Types::STRING,
+                XMLSchema::TYPE_ANYSIMPLETYPE => Types::STRING,
+            ])
+            ->setTypes();
     }
 
     private function getSerializer()
@@ -146,52 +179,148 @@ class RunnerTest extends TestCase
     private function matchAttributes($attributes, $deserialized): void
     {
         foreach ($attributes as $attribute_name => $attribute_value) {
-            /** @var NamingStrategy $strategy */
-            $strategy = App::getInstance()->get(NamingStrategy::class);
-            $getter_method = $strategy->getGetterMethod($attribute_name);
+            $getter_method = $this->strategy->getGetterMethod($attribute_name);
 
             $deserialized_value = $deserialized->$getter_method();
 
-            switch ($this->getType($deserialized_value)) {
-                case DateTime::class:
-                    $this->assertTrue($this->compareDateTime($deserialized_value, new DateTime((string)$attribute_value)));
-                    break;
-                case 'numeric':
-                    $this->assertEquals($deserialized_value, (float)$attribute_value);
-                    break;
-                case 'string':
-                    $this->assertEquals($deserialized_value, (string)$attribute_value);
-                    break;
-                default:
-                    throw new \Exception('wrong behaviour');
-            }
+            $this->matchValue($deserialized_value, $attribute_value);
         }
     }
 
     /**
      * @param SimpleXMLElement $elements
      * @param $deserialized
+     * @param string[] $namespaces
      * @throws Exception
      * @throws \Illuminate\Container\EntryNotFoundException
      */
-    private function matchElements($elements, $deserialized): void
+    private function matchElements($elements, $deserialized, array $namespaces): void
     {
-        $index = 0;
+        $indexes = [];
         foreach ($elements as $element_name => $element) {
-            /** @var NamingStrategy $strategy */
-            $strategy = App::getInstance()->get(NamingStrategy::class);
-            $getter_method = $strategy->getGetterMethod($element_name);
+            if (isset($indexes[$element_name])) {
+                $indexes[$element_name]++;
+            } else {
+                $indexes[$element_name] = 0;
+            }
 
-            $current_deserialized = $deserialized->$getter_method();
+            $getter_method = $this->strategy->getGetterMethod($element_name);
 
-            $this->matchAttributes(
-                $element->attributes(),
-                is_array($current_deserialized) ? $current_deserialized[$index] : $current_deserialized
-            );
+            if (is_array($deserialized)) {
+                $current_deserialized = $deserialized[$indexes[$element_name]];
+            } else {
+                $current_deserialized = $deserialized->$getter_method();
 
-            $this->matchElements($element->children(), $current_deserialized);
+                if (is_array($current_deserialized) && is_object($current_deserialized[0])) {
+                    if (!$this->hasNextElementMethod($current_deserialized[0], $element)) {
+                        $current_deserialized = $current_deserialized[$indexes[$element_name]];
+                    }
+                }
+            }
 
-            is_array($current_deserialized) && $index++;
+            if (!is_array($current_deserialized)) {
+                $this->matchAttributes(
+                    $element->attributes(),
+                    $current_deserialized
+                );
+            }
+
+            if (is_object($deserialized) && method_exists($current_deserialized, 'getValue')) {
+                $this->matchValue($current_deserialized->getValue(), $element);
+            }
+
+            foreach ($namespaces as $namespace) {
+                $this->matchElements($element->children($namespace), $current_deserialized, $namespaces);
+            }
+
         }
     }
+
+    /**
+     * @param $desserialized
+     * @param $element
+     * @return bool
+     * @throws \Illuminate\Container\EntryNotFoundException
+     */
+    private function hasNextElementMethod(object $desserialized, SimpleXMLElement $element): bool
+    {
+        foreach ($element as $element_name => $item) {
+            $getter_method = $this->strategy->getGetterMethod($element_name);
+
+            if (method_exists($desserialized, $getter_method)) {
+                return false;
+            }
+        }
+
+        foreach ($element->attributes() as $attribute_name => $item) {
+            $getter_method = $this->strategy->getGetterMethod($attribute_name);
+
+            if (method_exists($desserialized, $getter_method)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function setLibXMLLoader()
+    {
+        libxml_set_external_entity_loader(function ($file, $name) {
+            if (is_file($name)) {
+                return fopen($name, 'rb');
+            }
+
+            if (is_file($file_name = self::XSD_DIR . '/OTA/' . $name)) {
+                return fopen($file_name, 'rb');
+            }
+
+            throw new Exception('Can`t find XSD: ' . $name);
+        });
+    }
+
+    public function getXSDs()
+    {
+        $this->setLibXMLLoader();
+
+        $glob = glob(self::XSD_DIR . '/*/*.xsd');
+        $glob = array_map(function ($i) {
+            return [$i];
+        }, $glob);
+
+        $r = array_shift($glob);
+
+        return $glob;
+    }
+
+    /**
+     * @param $deserialized_value
+     * @param $value
+     * @throws Exception
+     */
+    private function matchValue($deserialized_value, $value): void
+    {
+        switch ($this->getType($deserialized_value)) {
+            case DateTime::class:
+                $this->assertTrue($this->compareDateTime($deserialized_value, new DateTime((string)$value)));
+                break;
+            case DateInterval::class:
+                $this->assertTrue(true);//todo fix
+                break;
+            case 'numeric':
+                $this->assertEquals($deserialized_value, (float)$value);
+                break;
+            case 'string':
+                $this->assertEquals($deserialized_value, (string)$value);
+                break;
+            case 'array':
+                $this->assertEquals($deserialized_value, (array)$value);
+                break;
+            case 'bool':
+                $this->assertEquals($deserialized_value ? 'true' : 'false', (string)$value);
+                break;
+            default:
+                throw new \Exception('wrong behaviour');
+        }
+    }
+
 }

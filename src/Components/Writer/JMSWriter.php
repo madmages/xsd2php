@@ -2,7 +2,7 @@
 
 namespace Madmages\Xsd\XsdToPhp\Components\Writer;
 
-use Madmages\Xsd\XsdToPhp\PathGenerator;
+use Madmages\Xsd\XsdToPhp\Contract\PathGenerator;
 use Symfony\Component\Yaml\Dumper;
 
 class JMSWriter

@@ -2,10 +2,8 @@
 
 namespace Madmages\Xsd\XsdToPhp\Components\PathGenerator;
 
-use Illuminate\Container\Container;
 use Madmages\Xsd\XsdToPhp\Config;
-use Madmages\Xsd\XsdToPhp\PathGenerator;
-use Madmages\Xsd\XsdToPhp\Php\Structure\PHPClass;
+use Madmages\Xsd\XsdToPhp\Contract\PathGenerator;
 use Zend\Code\Generator\ClassGenerator;
 
 class Psr4 implements PathGenerator
@@ -18,16 +16,10 @@ class Psr4 implements PathGenerator
 
     /**
      * Psr4PathGenerator constructor.
-     * @throws \Psr\Container\NotFoundExceptionInterface
-     * @throws \Psr\Container\ContainerExceptionInterface
-     * @throws \RuntimeException
-     * @throws \Illuminate\Container\EntryNotFoundException
+     * @param Config $config
      */
-    public function __construct()
+    public function __construct(Config $config)
     {
-        /** @var Config $config */
-        $config = Container::getInstance()->get(Config::class);
-
         $this->setTargets($config->getDestinationJMS(), self::JMS);
         $this->setTargets($config->getDestinationPHP(), self::PHP);
     }
@@ -85,7 +77,7 @@ class Psr4 implements PathGenerator
             $position = strpos(trim($zend_class->getNamespaceName()), $php_namespace);
 
             if ($position === 0) {
-                $dir_postfix = str_replace(PHPClass::NS_SLASH, '/', substr($zend_class->getNamespaceName(), strlen($php_namespace)));
+                $dir_postfix = str_replace('\\', '/', substr($zend_class->getNamespaceName(), strlen($php_namespace)));
                 $destination = rtrim($destination, '/') . $dir_postfix;
 
                 if (!is_dir($destination) && !mkdir($destination, 0777, true) && !is_dir($destination)) {
@@ -97,6 +89,6 @@ class Psr4 implements PathGenerator
             }
         }
 
-        throw new \RuntimeException("Unable to determine location to save PHP class '" . $zend_class->getNamespaceName() . PHPClass::NS_SLASH . $zend_class->getName() . "'");
+        throw new \RuntimeException("Unable to determine location to save PHP class '" . $zend_class->getNamespaceName() . '\\' . $zend_class->getName() . "'");
     }
 }

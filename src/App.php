@@ -5,35 +5,70 @@ namespace Madmages\Xsd\XsdToPhp;
 use GoetasWebservices\XML\XSDReader\SchemaReader;
 use Illuminate\Container\Container;
 use Madmages\Xsd\XsdToPhp\Components\Writer\JMSWriter;
-use Madmages\Xsd\XsdToPhp\Components\Writer\PHPWriter;
-use Madmages\Xsd\XsdToPhp\Jms\YamlConverter;
-use Madmages\Xsd\XsdToPhp\Php\PhpConverter;
+use Madmages\Xsd\XsdToPhp\Components\Writer\PHPClassWriter;
+use Madmages\Xsd\XsdToPhp\Handler\Jms;
+use Madmages\Xsd\XsdToPhp\Handler\Php;
 
 final class App extends Container
 {
     /**
-     * @param array $xsd_files
+     * @param string[] $xsd_files
      * @param Config $config
+     * @return App
      * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \Psr\Container\NotFoundExceptionInterface
      */
-    public static function run(array $xsd_files, Config $config)
+    public static function run(array $xsd_files, Config $config): self
     {
-        self::setInstance();
+        return (new self())
+            ->init($config)
+            ->process($xsd_files, $config);
+    }
 
-        $i = self::getInstance();
-        $i->instance(Config::class, $config);
+    private function init(Config $config)
+    {
+        $this->instance(Config::class, $config);
+        $this->singleton(SchemaReader::class);
+        $this->singleton(Contract\NamingStrategy::class, $config->getNamingStrategy());
+        $this->singleton(Contract\PathGenerator::class, $config->getPathGenerator());
 
-        $schema_reader = $i->make(SchemaReader::class);
-        $schemas = [];
+        return $this;
+    }
+
+    /**
+     * @param string[] $xsd_files
+     * @param Config $config
+     * @return App
+     */
+    private function process(array $xsd_files, Config $config): self
+    {
+        ChunkClass::empty();
+        ChunkValidator::empty();
+
+        $schema_reader = $this->make(SchemaReader::class);
+
+        $php_classes = [];
         foreach ($xsd_files as $file) {
-            $schemas[] = $schema_reader->readFile($file);
+            $php_classes[] = $schema_reader->readFile($file);
         }
 
-        $i->singleton(NamingStrategy::class, $config->getNamingStrategy());
-        $i->singleton(PathGenerator::class, $config->getPathGenerator());
+        $chunks = $this->make(Converter::class)->process($php_classes);
 
-        $i->make(PHPWriter::class)->write($i->make(PhpConverter::class)->convert($schemas));
-        $i->make(JMSWriter::class)->write($i->make(YamlConverter::class)->convert($schemas));
+        $php = $this->make(Php::class);
+        $classes = [];
+        foreach ($chunks as $chunk) {
+            $classes[] = $php->handle($chunk);
+        }
+
+        $jms = $this->make(Jms::class);
+        $jms_classes = [];
+        foreach ($chunks as $chunk) {
+            $jms_classes[] = $jms->handle($chunk);
+        }
+
+        $this->make(PHPClassWriter::class)->write($classes);
+        $this->make(JMSWriter::class)->write($jms_classes);
+
+        return $this;
     }
 }

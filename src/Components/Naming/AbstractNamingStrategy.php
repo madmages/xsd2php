@@ -3,7 +3,7 @@
 namespace Madmages\Xsd\XsdToPhp\Components\Naming;
 
 use Doctrine\Common\Inflector\Inflector;
-use Madmages\Xsd\XsdToPhp\NamingStrategy;
+use Madmages\Xsd\XsdToPhp\Contract\NamingStrategy;
 
 abstract class AbstractNamingStrategy implements NamingStrategy
 {
@@ -86,9 +86,9 @@ abstract class AbstractNamingStrategy implements NamingStrategy
         'xor',
     ];
 
-    public function getSetterMethod(string $item): string
+    public function getSetterMethod(string $property_name): string
     {
-        return 'set' . $this->classifyMethod($item);
+        return 'set' . $this->classifyMethod($property_name);
     }
 
     protected function classifyMethod(string $item): string
@@ -96,9 +96,9 @@ abstract class AbstractNamingStrategy implements NamingStrategy
         return Inflector::classify($item);
     }
 
-    public function getGetterMethod(string $item): string
+    public function getGetterMethod(string $property_name): string
     {
-        return 'get' . $this->classifyMethod($item);
+        return 'get' . $this->classifyMethod($property_name);
     }
 
     protected function classify(?string $name): string
